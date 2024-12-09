@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-// import home.css from styles folder
+import { Link } from 'react-router-dom';
 
+import '../styles/home.css';
 
 const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };  
+  };
 
   return (
-    <div>
+    <div className="home">
       {/* Sidebar Menu */}
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`} id="sidebar">
         <div className="sidebar-content">
-          <a href="home.html">Home</a>
-          <a href="committee2.html">Committee</a>
-          <a href="facebook_final_login.html">Logout</a>
+          <Link to="/">Home</Link>
+          <Link to="/committee">Committee</Link>
+          <Link to="/">Logout</Link>
         </div>
       </div>
       {/* Hamburger Icon */}
@@ -28,7 +29,7 @@ const Home = () => {
 
       {/* Main Content */}
       <div className="Home">
-        <h2>Meeting Management Automation Workspace</h2>
+        <h2 className="homeHead">Meeting Management Automation Workspace</h2>
         <div className="top">
           <div id="pfp">
             <img

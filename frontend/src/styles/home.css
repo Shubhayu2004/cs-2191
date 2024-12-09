@@ -1,5 +1,4 @@
-body,
-html {
+.home {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -71,7 +70,7 @@ html {
   padding-top: 40px;
 }
 
-h2 {
+.homeHead {
   text-align: center;
   padding: 15px;
   font-size: 1.7rem;
@@ -142,7 +141,7 @@ h2 {
 }
 
 @media (max-width: 600px) {
-  h2 {
+  .homeHead {
     font-size: 24px;
     padding: 8px;
   }
