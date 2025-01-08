@@ -8,7 +8,9 @@ import WelcomePage from "./pages/welcome.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/Registerpage.jsx";
 import ScheduleMeeting from "./pages/scheduleMeeting.jsx";
-
+import UserProtectWrapper from "./pages/userProtectWrapper.jsx";
+import UserLogout from "./pages/UserLogout.jsx";
+import UserContext from "./context/UserContext.jsx";
 const App = () => {
   return (
     <div>
@@ -20,9 +22,20 @@ const App = () => {
         <Route path="/Schedule_meeting" element={<ScheduleMeeting />} />
         <Route path="/Login" element={<LoginPage />} />
         <Route path="/Register" element={<RegisterPage />} />
-        <Route path="/home" element={<Home />} />
+        {/* <Route path="/home" element={<Home />} /> */}
         <Route path="/committee" element={<CommitteeApp />} />
         <Route path="/committeeDashboard" element={<CommitteeDashboard />} />
+        <Route path='/home'
+          element={
+            <UserProtectWrapper>
+              <Home />
+            </UserProtectWrapper>
+          } />
+        <Route path='/user/logout'
+          element={<UserProtectWrapper>
+            <UserLogout />
+          </UserProtectWrapper>
+          } />
       </Routes>
     </div>
   );

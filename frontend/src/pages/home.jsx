@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
-
+import { UserDataContext } from '../context/UserContext';
 import '../styles/home.css';
 
 const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useContext(UserDataContext); // Access user context
+  // console.log(user);
+
 
   const toggleMenu = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -17,7 +20,7 @@ const Home = () => {
         <div className="sidebar-content">
           <Link to="/">Home</Link>
           <Link to="/committee">Committee</Link>
-          <Link to="/">Logout</Link>
+          <Link to="/user/logout">Logout</Link>
         </div>
       </div>
       {/* Hamburger Icon */}
@@ -38,9 +41,16 @@ const Home = () => {
             />
           </div>
           <div id="person">
-            <p><i className="fas fa-user"></i> Name: First Middle Last</p>
-            <p><i className="fas fa-envelope"></i> User ID: firstlast@gmail.com</p>
-            <p><i className="fas fa-briefcase"></i> Role: Head Of the Department, CST</p>
+            <p>
+              <i className="fas fa-user"></i> Name:{' '}
+              {user?.fullname?.firstname } {user?.fullname?.lastname || ''}
+            </p>
+            <p>
+              <i className="fas fa-envelope"></i> User ID: {user?.email || 'N/A'}
+            </p>
+            <p>
+              <i className="fas fa-briefcase"></i> Role: Head Of the Department, CST
+            </p>
           </div>
           <div id="logo">
             <img

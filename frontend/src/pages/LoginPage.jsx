@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/LoginPage.css'; // Optional for custom styling
+import '../styles/LoginPage.css';
 import { UserDataContext } from '../context/UserContext';
 
 function LoginPage() {
@@ -10,42 +10,45 @@ function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { user , setuser } = useContext(UserDataContext);
+  const { user, setUser } = useContext(UserDataContext); // Fixed typo
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
-    
+
     const userData = {
       email: email,
       password: password,
-      
-    }
-
+    };
 
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/users/login`,
-        userData,
+        userData
       );
 
       if (response.status === 200) {
+        const data = response.data;
+
+        // Update context and store token
+        setUser(data.user);
+        localStorage.setItem('token', data.token);
+
+        // Display success message
         setSuccessMessage('Login successful! Redirecting...');
-        setTimeout(() => navigate('/home'), 500); // Navigate to the dashboard
-        const data = response.data
-        setUser(data.user)
-        localStorage.setItem('token', data.token)
+        setErrorMessage(''); // Clear any previous error message
+
+        // Redirect after a short delay
+        setTimeout(() => navigate('/home'), 1000);
       }
     } catch (error) {
       const errorResponse =
         error.response?.data?.message || 'Invalid email or password!';
       setErrorMessage(errorResponse);
+      setSuccessMessage(''); // Clear any previous success message
     }
-
-    setEmail('');
-    setPassword('');
   };
 
   return (
