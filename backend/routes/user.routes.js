@@ -1,30 +1,46 @@
-
 const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/user.model');
+const checkRole = require('../middlewares/rbac');
 const router = express.Router();
-const { body } = require("express-validator")
-const userController = require('../controllers/user.controller');
-const authMiddleware = require('../middlewares/auth.middleware');
 
+// Register user
+router.post('/register', async (req, res) => {
+  const { firstname, lastname, email, password } = req.body;
+  const user = new User({ fullname: { firstname, lastname }, email, password: await bcrypt.hash(password, 10) });
 
-router.post('/register', [
-    body('email').isEmail().withMessage('Invalid Email'),
-    body('fullname.firstname').isLength({ min: 3 }).withMessage('First name must be at least 3 characters long'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-],
-    userController.registerUser
-)
+  try {
+    await user.save();
+    const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(201).json({ user, token });
+  } catch (err) {
+    res.status(400).send('Error registering user');
+  }
+});
 
-router.post('/login', [
-    body('email').isEmail().withMessage('Invalid Email'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-],
-    userController.loginUser
-)
+// Login user
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
 
-router.get('/profile', authMiddleware.authUser, userController.getUserProfile)
+  if (!user || !await bcrypt.compare(password, user.password)) {
+    return res.status(400).send('Invalid credentials');
+  }
 
-router.get('/logout', authMiddleware.authUser, userController.logoutUser)
+  const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  res.status(200).json({ user, token });
+});
 
+// Protected route
+router.get('/profile', checkRole(['user', 'admin']), async (req, res) => {
+  const user = await User.findById(req.user._id);
+  res.status(200).json(user);
+});
 
+// Admin-only route
+router.get('/admin', checkRole(['admin']), (req, res) => {
+  res.status(200).send('Admin access granted');
+});
 
 module.exports = router;

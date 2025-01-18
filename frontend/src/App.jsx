@@ -1,41 +1,26 @@
-import { React } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import React, { useContext } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Home from "./pages/Home";
+import CommitteeDashboard from "./pages/CommitteeDash";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/Registerpage";
+import userProtectWrapper from "./pages/userProtectWrapper";
+import { UserDataContext } from "./context/UserContext";
 
-import Home from "./pages/home.jsx";
-import CommitteeApp from "./pages/committee.jsx";
-import CommitteeDashboard from "./pages/committeeDash.jsx";
-import WelcomePage from "./pages/welcome.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import RegisterPage from "./pages/Registerpage.jsx";
-import ScheduleMeeting from "./pages/scheduleMeeting.jsx";
-import UserProtectWrapper from "./pages/userProtectWrapper.jsx";
-import UserLogout from "./pages/UserLogout.jsx";
-import UserContext from "./context/UserContext.jsx";
 const App = () => {
+  const { user } = useContext(UserDataContext);
+
   return (
     <div>
       <Routes>
-        {/* Handle root path */}
-        <Route path="/" element={<WelcomePage/>} />
-
-        {/* Other defined routes */}
-        <Route path="/Schedule_meeting" element={<ScheduleMeeting />} />
-        <Route path="/Login" element={<LoginPage />} />
-        <Route path="/Register" element={<RegisterPage />} />
-        {/* <Route path="/home" element={<Home />} /> */}
-        <Route path="/committee" element={<CommitteeApp />} />
-        <Route path="/committeeDashboard" element={<CommitteeDashboard />} />
-        <Route path='/home'
-          element={
-            <UserProtectWrapper>
-              <Home />
-            </UserProtectWrapper>
-          } />
-        <Route path='/user/logout'
-          element={<UserProtectWrapper>
-            <UserLogout />
-          </UserProtectWrapper>
-          } />
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/home" element={<UserProtectWrapper><Home /></UserProtectWrapper>} />
+        <Route path="/committee" element={<UserProtectWrapper><CommitteeApp /></UserProtectWrapper>} />
+        <Route path="/committeeDashboard" element={<UserProtectWrapper><CommitteeDashboard /></UserProtectWrapper>} />
+        {/* Role-based route: Only admins can access */}
+        <Route path="/admin" element={user?.role === 'admin' ? <AdminPage /> : <Navigate to="/home" />} />
       </Routes>
     </div>
   );
