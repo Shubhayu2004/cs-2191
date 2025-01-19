@@ -1,10 +1,12 @@
 import React, { useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
+import CommitteeApp from "./pages/committee";
 import CommitteeDashboard from "./pages/CommitteeDash";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/Registerpage";
-import userProtectWrapper from "./pages/userProtectWrapper";
+import WelcomePage from "./pages/welcome";
+import UserProtectWrapper from "./pages/userProtectWrapper";
 import { UserDataContext } from "./context/UserContext";
 
 const App = () => {
