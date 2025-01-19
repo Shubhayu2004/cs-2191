@@ -1,0 +1,132 @@
+.landing {
+  width: 100%;
+  height: 100vh;
+  background: url("/assets/bg.png") no-repeat center center fixed;
+  background-size: cover;
+  color: #FAFAFF;
+  background: linear-gradient(90deg, #0f1a50, #1f3b78, #426ecd, #c8d7f7);
+
+
+
+  font-family: "Roboto", Arial, Helvetica, sans-serif;
+  overflow-y: hidden;
+  /* Centers the image */
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  width: 70%;
+  height: 100vh;
+
+  justify-content: center;
+  position: absolute;
+  /* Absolute positioning to float over the right part */
+  left: 10px;
+  top: 0;
+
+
+}
+
+.name {
+  position: absolute;
+  top: 20px;
+  left: 100px;
+  font-family: "Outfit", Arial, Helvetica, sans-serif;
+  letter-spacing: 1.75px;
+  color: #feb200;
+}
+
+
+
+
+.description {
+
+  margin-left: 100px;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+}
+
+.name2 {
+
+  font-family: "Outfit", Arial, Helvetica, sans-serif;
+  letter-spacing: 1.75px;
+  font-weight: 700;
+  color: #feb200;
+  font-size: 35px;
+  margin: 10px;
+}
+
+.welcome {
+  box-sizing: border-box;
+  margin: 20px;
+
+}
+
+.slogan {
+  margin-left: 30px;
+  margin-top: 100px;
+  letter-spacing: 2px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  /* Matches the remaining width of the .landing container */
+
+
+
+}
+
+.logo {
+  z-index: 2;
+  margin-top: 180px;
+  right: 20px;
+  opacity: 0.1;
+  width: 500px;
+
+  border: collapse;
+  position: absolute;
+}
+
+.navbar {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.navbar a {
+  text-decoration: none;
+  border-radius: 5px;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: #4B4AEF;
+}
+
+.login {
+  border: #4B4AEF 0.5px solid;
+  background-color: white;
+  color: black;
+}
+
+.signup {
+  background-color: #FFCA1D;
+  color: #1F1F1F;
+  border: black 0.5px solid;
+}
+
+@media screen and (max-width: 930px) {
+  .landing {
+    flex-direction: column;
+  }
+
+
+}
