@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
+
+import { UserDataContext } from '../context/UserContext';
+
 
 import styles from '../styles/home.module.css';
 
 const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const { user } = useContext(UserDataContext);
   const toggleMenu = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -47,7 +50,7 @@ const Home = () => {
               alt="Profile"
             />
           </div>
-          <div id="person">
+          <div className={styles.person}>
             <p>
               <i className="fas fa-user"></i> Name:{' '}
               {user?.fullname?.firstname} {user?.fullname?.lastname || ''}
@@ -56,7 +59,7 @@ const Home = () => {
               <i className="fas fa-envelope"></i> User ID: {user?.email || 'N/A'}
             </p>
             <p>
-              <i className="fas fa-briefcase"></i> Role: Head Of the Department, CST
+              <i className={styles.fas_fa_briefcase}></i> Role: Head Of the Department, CST
             </p>
           </div>
           {/* <div className={styles.logo}>
@@ -102,7 +105,7 @@ const Home = () => {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
