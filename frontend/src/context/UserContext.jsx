@@ -9,7 +9,8 @@ const UserContext = ({ children }) => {
         email: '',
         fullName: {
             firstName: '',
-            lastName: ''
+            lastName: '',
+            status: ''
         }
     })
 

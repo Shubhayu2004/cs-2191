@@ -72,3 +72,27 @@ module.exports.logoutUser = async (req, res, next) => {
     res.status(200).json({ message: 'Logged out' });
 
 }
+module.exports.updateUserRole = async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    try {
+        const user = await User.findById(id);
+        if (!user) return res.status(404).send('User not found.');
+
+        user.status = role;
+        await user.save();
+
+        res.status(200).send('User role updated successfully.');
+    } catch (err) {
+        res.status(500).send('Server error.');
+    }
+}
+module.exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).send('Server error.');
+    }
+}

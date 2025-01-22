@@ -26,8 +26,11 @@ const userSchema = new mongoose.Schema({
         required: true,
         select: false,
     },
-    socketId: {
+    status: {
         type: String,
+        default: 'member',
+        enum: ['member', 'admin', 'convenor' , 'chairman'],
+        
     },
 })
 

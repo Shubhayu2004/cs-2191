@@ -25,6 +25,11 @@ router.get('/profile', authMiddleware.authUser, userController.getUserProfile)
 
 router.get('/logout', authMiddleware.authUser, userController.logoutUser)
 
+router.put('/update-role/:id', authMiddleware.authUser, authMiddleware.isAdmin, [
+    body('role').isIn(['member', 'admin', 'chairman', 'convenor']).withMessage('Invalid role')
+], userController.updateUserRole);
+
+router.get('/users', authMiddleware.authUser, authMiddleware.isAdmin, userController.getAllUsers);
 
 
 module.exports = router;

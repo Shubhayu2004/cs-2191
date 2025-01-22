@@ -24,7 +24,7 @@ const Home = () => {
       {/* Sidebar Menu */}
       <div className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
         <div className={styles.sidebarContent}>
-          <Link to="/">Home</Link>
+          <Link to="/home">Home</Link>
           <Link to="/committee">Committee</Link>
           <Link to="/user/logout">Logout</Link>
         </div>
@@ -57,6 +57,9 @@ const Home = () => {
             </p>
             <p>
               <i className="fas fa-envelope"></i> User ID: {user?.email || 'N/A'}
+            </p>
+            <p>
+              <i className="fas fa-envelope"></i> Status: {user?.status || 'N/A'}
             </p>
             <p>
               <i className={styles.fas_fa_briefcase}></i> Role: Head Of the Department, CST

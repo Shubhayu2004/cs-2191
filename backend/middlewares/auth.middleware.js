@@ -30,3 +30,8 @@ module.exports.authUser = async (req, res, next) => {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 }
+
+module.exports.isAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') return res.status(403).send('Access denied.');
+    next();
+}
