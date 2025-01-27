@@ -114,14 +114,16 @@ li {
 }
 
 .utility button,
-#save {
+#save,
+.notify {
 
   background-color: #1e8313;
 
 }
 
 .utility button:hover,
-#save:hover {
+#save:hover,
+.notify:hover {
   background-color: #219b13;
 }
 
@@ -283,4 +285,12 @@ label {
   overflow-y: auto;
   height: 80vh;
   z-index: 1000;
+}
+
+.suggest {
+  background-color: rgb(12, 12, 204);
+}
+
+.suggest:hover {
+  background-color: #13699b;
 }

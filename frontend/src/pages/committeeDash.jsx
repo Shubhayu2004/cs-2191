@@ -241,6 +241,8 @@ function CommitteeDashboard() {
                         <button type="button" id="generate-pdf" onClick={generatePDF}>
                             Generate PDF
                         </button>
+                        <button type="button" className="suggest" >Suggest Changes</button>
+                        <button type="button" className="notify" >Save and Notify</button>
                     </form>
                 </section>
             )}
