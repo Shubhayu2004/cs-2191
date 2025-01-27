@@ -4,6 +4,7 @@ const router = express.Router();
 const { body } = require("express-validator")
 const userController = require('../controllers/user.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
+const User = require('../models/user.model');
 
 
 router.post('/register', [
@@ -29,7 +30,7 @@ router.put('/update-role/:id', authMiddleware.authUser, authMiddleware.isAdmin, 
     body('role').isIn(['member', 'admin', 'chairman', 'convenor']).withMessage('Invalid role')
 ], userController.updateUserRole);
 
-router.get('/users', authMiddleware.authUser, authMiddleware.isAdmin, userController.getAllUsers);
+router.get('/users',  authMiddleware.isAdmin, userController.getAllUsers);
 
 
 module.exports = router;

@@ -29,6 +29,7 @@ const App = () => {
           <Route path="/Register" element={<RegisterPage />} />
           <Route path="/committee" element={<CommitteeApp />} />
           <Route path="/committeeDashboard" element={<CommitteeDashboard />} />
+          <Route path="/manage-users" element={<ManageUsers />} />
           <Route path="/home" element={
             <UserProtectWrapper>
               <Home />
@@ -38,9 +39,6 @@ const App = () => {
             <UserProtectWrapper>
               <UserLogout />
             </UserProtectWrapper>
-          } />
-          <Route path="/manage-users" element={
-            <PrivateRoute element={<ManageUsers />} />
           } />
         </Routes>
       </UserContext>

@@ -12,7 +12,7 @@ const Home = () => {
   const toggleMenu = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
-  const [notifications, setNotifications] = useState(5); // Initial notification count
+  const [notifications, setNotifications] = useState(5); 
   const [showNotis, setShowNotis] = useState(false);
   const handleClick = () => {
     setNotifications(0);
@@ -27,6 +27,9 @@ const Home = () => {
           <Link to="/home">Home</Link>
           <Link to="/committee">Committee</Link>
           <Link to="/user/logout">Logout</Link>
+          {user?.status === 'admin' && (
+            <Link to="/manage-users">Manage Users</Link>
+          )}
         </div>
       </div>
 
@@ -64,6 +67,8 @@ const Home = () => {
             <p>
               <i className={styles.fas_fa_briefcase}></i> Role: Head Of the Department, CST
             </p>
+
+       
           </div>
           {/* <div className={styles.logo}>
             <img

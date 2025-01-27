@@ -32,22 +32,21 @@ function LoginPage() {
       if (response.status === 200) {
         const data = response.data;
 
-        // Update context and store token
+
         setUser(data.user);
         localStorage.setItem('token', data.token);
 
-        // Display success message
         setSuccessMessage('Login successful! Redirecting...');
-        setErrorMessage(''); // Clear any previous error message
+        setErrorMessage(''); 
 
-        // Redirect after a short delay
+
         setTimeout(() => navigate('/home'), 1000);
       }
     } catch (error) {
       const errorResponse =
         error.response?.data?.message || 'Invalid email or password!';
       setErrorMessage(errorResponse);
-      setSuccessMessage(''); // Clear any previous success message
+      setSuccessMessage(''); 
     }
   };
 
