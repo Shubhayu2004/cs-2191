@@ -1,8 +1,8 @@
-import React, { useState , useContext} from 'react';
-import { Link , useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { UserDataContext } from '../context/UserContext';
-import '../styles/RegisterPage.css'; // Optional for custom styling
+import styles from '../styles/RegisterPage.module.css'; // Optional for custom styling
 
 function RegisterPage() {
   const [firstname, setFirstName] = useState('');
@@ -14,9 +14,9 @@ function RegisterPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const navigate = useNavigate();
-  const {user , setUser} = useContext(UserDataContext);
+  const { user, setUser } = useContext(UserDataContext);
 
-  
+
   const resetFields = () => {
     setFirstName('');
     setLastName('');
@@ -66,7 +66,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="register-container">
+    <div className={styles.registercontainer}>
       <h1>Register</h1>
       <form onSubmit={handleRegister}>
         <div>
@@ -119,8 +119,8 @@ function RegisterPage() {
             required
           />
         </div>
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
-        {successMessage && <p className="success-message">{successMessage}</p>}
+        {errorMessage && <p className={styles.errormessage}>{errorMessage}</p>}
+        {successMessage && <p className={styles.successmessage}>{successMessage}</p>}
         <button type="submit">Register</button>
         <p>
           Already have an account? <Link to="/login">Login</Link>

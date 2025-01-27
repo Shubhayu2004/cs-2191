@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/LoginPage.css';
+import styles from '../styles/LoginPage.module.css';
 import { UserDataContext } from '../context/UserContext';
 
 function LoginPage() {
@@ -37,7 +37,7 @@ function LoginPage() {
         localStorage.setItem('token', data.token);
 
         setSuccessMessage('Login successful! Redirecting...');
-        setErrorMessage(''); 
+        setErrorMessage('');
 
 
         setTimeout(() => navigate('/home'), 1000);
@@ -46,12 +46,12 @@ function LoginPage() {
       const errorResponse =
         error.response?.data?.message || 'Invalid email or password!';
       setErrorMessage(errorResponse);
-      setSuccessMessage(''); 
+      setSuccessMessage('');
     }
   };
 
   return (
-    <div className="login-container">
+    <div className={styles.logincontainer}>
       <h1>Login</h1>
       <form onSubmit={handleLogin}>
         <div>
@@ -74,14 +74,14 @@ function LoginPage() {
             required
           />
         </div>
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
-        {successMessage && <p className="success-message">{successMessage}</p>}
+        {errorMessage && <p className={styles.errormessage}>{errorMessage}</p>}
+        {successMessage && <p className={styles.successmessage}>{successMessage}</p>}
         <button type="submit">Login</button>
         <p>
           Don't have an account? <Link to="/register">Register</Link>
         </p>
       </form>
-    </div>
+    </ div>
   );
 }
 
