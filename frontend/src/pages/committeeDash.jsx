@@ -1,158 +1,127 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
-import "../styles/committeeDash.css"; // Add your styles here or inline styles
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import "../styles/committeeDash.css";
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
-
+    const { id } = useParams();
+    
+    const [committee, setCommittee] = useState({
+        committeeName: '',
+        committeePurpose: '',
+        chairman: { name: '', email: '', contactNumber: '' },
+        convener: { name: '', email: '', contactNumber: '' },
+        members: []
+    });
+    const [upcomingMeetings, setUpcomingMeetings] = useState([]);
+    const [recentMeetings, setRecentMeetings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showUpcomingMeetings, setShowUpcomingMeetings] = useState(false);
     const [showRecentMeetings, setShowRecentMeetings] = useState(false);
-    const [showMinutesForm, setShowMinutesForm] = useState(false);
-
-    const upcomingMeetingsData = [
-        { topic: 'Exam', date: '19/11/2024', time: '14:30' },
-        { topic: 'Research', date: '19/12/2024', time: '14:30' },
-        { topic: 'AI Workshop', date: '25/12/2024', time: '10:00' },
-        { topic: 'Tech Team Sync', date: '02/01/2025', time: '09:30' },
-        { topic: 'Cloud Deployment Review', date: '10/01/2025', time: '16:00' },
-        { topic: 'API Integration Discussion', date: '15/01/2025', time: '11:00' },
-        { topic: 'Code Quality Audit', date: '20/01/2025', time: '15:30' },
-        { topic: 'DevOps Strategy Planning', date: '28/01/2025', time: '13:00' },
-        { topic: 'Cybersecurity Awareness', date: '05/02/2025', time: '10:30' },
-        { topic: 'System Architecture Review', date: '12/02/2025', time: '14:00' }
-    ];
-
-
-
-    const recentMeetingsData = [
-        { topic: 'Exam', date: '19/10/2024', time: '14:30', minutes: 'minutes1.pdf' },
-        { topic: 'Research', date: '29/10/2024', time: '15:00', minutes: 'minutes2.pdf' },
-        { topic: 'AI Ethics Discussion', date: '05/10/2024', time: '11:00', minutes: 'minutes3.pdf' },
-        { topic: 'Backend Optimization Review', date: '10/10/2024', time: '13:30', minutes: 'minutes4.pdf' },
-        { topic: 'Blockchain Implementation', date: '12/10/2024', time: '10:00', minutes: 'minutes5.pdf' },
-        { topic: 'Frontend Frameworks Comparison', date: '15/10/2024', time: '16:00', minutes: 'minutes6.pdf' },
-        { topic: 'Data Privacy Seminar', date: '18/10/2024', time: '09:00', minutes: 'minutes7.pdf' },
-        { topic: 'Machine Learning Trends', date: '20/10/2024', time: '14:00', minutes: 'minutes8.pdf' },
-        { topic: 'Network Security Assessment', date: '22/10/2024', time: '12:30', minutes: 'minutes9.pdf' },
-        { topic: 'Full Stack Development Update', date: '25/10/2024', time: '10:30', minutes: 'minutes10.pdf' }
-    ];
-
-
-    const MembersData = [
-        { name: 'Saurav', email: 'saurav482@example.com', mobile: '+919876543210' },
-        { name: 'Aritra', email: 'aritra831@example.com', mobile: '+919845673210' },
-        { name: 'Tanisha', email: 'tanisha294@example.com', mobile: '+919812345678' },
-        { name: 'Arham', email: 'arham117@example.com', mobile: '+919834567890' },
-        { name: 'Akshay', email: 'akshay508@example.com', mobile: '+919876123456' },
-        { name: 'Akshay', email: 'akshay672@example.com', mobile: '+919876987654' },
-        { name: 'Akshay', email: 'akshay329@example.com', mobile: '+919876543219' },
-        { name: 'Akshay', email: 'akshay840@example.com', mobile: '+919876000001' },
-        { name: 'Akshay', email: 'akshay123@example.com', mobile: '+919876543456' },
-        { name: 'Arham', email: 'arham902@example.com', mobile: '+919812456789' }
-    ];
-
 
     useEffect(() => {
+        const fetchCommitteeData = async () => {
+            if (!id) {
+                setError('No committee ID provided');
+                setLoading(false);
+                return;
+            }
 
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/api/committees/${id}`,
+                    {
+                        headers: { 
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                setCommittee(response.data);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching committee:', err);
+                setError(err.response?.data?.message || 'Error loading committee');
+                setLoading(false);
+            }
+        };
 
-    }, []);
+        fetchCommitteeData();
+    }, [id]);
 
-    const populateMembers = () => {
-        return MembersData.map((member, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{member.name} </td>
-                <td>{member.email} </td>
-                <td>{member.mobile} </td>
-            </tr>
-        ));
-    };
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+    if (!committee) return <div>No committee found</div>;
 
-
-    const populateUpcomingMeetings = () => {
-        return upcomingMeetingsData.map((meeting, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{meeting.topic} </td>
-                <td>{meeting.date} </td>
-                <td>{meeting.time} </td>
-            </tr>
-        ));
-    };
-
-    const populateRecentMeetings = () => {
-        return recentMeetingsData.map((meeting, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{meeting.topic}</td>
-                <td>{meeting.date}</td>
-                <td>{meeting.time}</td>
-                <td>
-                    <button
-                        onClick={() => {
-                            console.log("View button clicked for:", meeting);
-                            toggleSection(setShowMinutesForm);
-                        }}
-                    >
-                        View
-                    </button>
-                </td>
-            </tr>
-        ));
-    };
 
     const toggleSection = (setter) => {
-        console.log("Toggling section"); // Debug log
-        setter((prev) => !prev);
+        setter(prev => !prev);
     };
 
-    const generatePDF = () => {
-        import("jspdf").then((jsPDF) => {
-            const doc = new jsPDF.jsPDF();
-            const content = document.getElementById("detail").value;
-            doc.text(content, 10, 10);
-            doc.save("minutes.pdf");
-        });
+    const handleLeaveCommittee = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/api/committees/${id}/leave`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            navigate('/committee');
+        } catch (err) {
+            setError(err.message);
+        }
     };
+
+    if (loading) return <div className="loading">Loading...</div>;
+    if (error) return <div className="error">Error: {error}</div>;
 
     return (
         <div className="committeeDash">
             <div className="back">
-                <button onClick={() => navigate('/committee')}>
-                    Go Back
-                </button>
+                <button onClick={() => navigate('/committee')}>Go Back</button>
             </div>
+
             <div className="primary">
                 <div className="desc">
-                    <h2 id="comName">Tech Committee</h2>
-                    <h3 id="purp">Purpose :</h3>
-                    <p id="purpose">
-                        This committee is formed with the moto of discussing tech events to
-                        be conducted by the Department of Computer Science and Technology
-                    </p>
+                    <h2 id="comName">{committee.committeeName}</h2>
+                    <h3 id="purp">Purpose:</h3>
+                    <p id="purpose">{committee.committeePurpose}</p>
                 </div>
+                
                 <div className="chief">
-                    <h4>Chairperson : Subhayu</h4>
-                    <h4>Convenor : Aishik</h4>
+                    <div className="chairman">
+                        <h4>Chairperson</h4>
+                        <p>Name: {committee.chairman.name}</p>
+                        <p>Email: {committee.chairman.email}</p>
+                        <p>Contact: {committee.chairman.contactNumber}</p>
+                    </div>
+                    
+                    <div className="convener">
+                        <h4>Convener</h4>
+                        <p>Name: {committee.convener.name}</p>
+                        <p>Email: {committee.convener.email}</p>
+                        <p>Contact: {committee.convener.contactNumber}</p>
+                    </div>
                 </div>
             </div>
+
             <div className="utility">
-                <button
-                    id="upcoming-meetings-btn"
-                    onClick={() => toggleSection(setShowUpcomingMeetings)}
-                >
-                    Upcoming Meetings
+                <button onClick={() => toggleSection(setShowUpcomingMeetings)}>
+                    {showUpcomingMeetings ? 'Hide' : 'Show'} Upcoming Meetings
                 </button>
-                <button
-                    id="recent-meetings-btn"
-                    onClick={() => toggleSection(setShowRecentMeetings)}
-                >
-                    Recent Meetings
+                <button onClick={() => toggleSection(setShowRecentMeetings)}>
+                    {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
                 </button>
-                <button id="leave">Leave</button>
+                <button onClick={handleLeaveCommittee} className="leave-btn">
+                    Leave Committee
+                </button>
             </div>
+
             <div className="members">
-                <h2 id="listHead">Committee Members</h2>
+                <h2>Committee Members</h2>
                 <table>
                     <thead>
                         <tr>
@@ -162,89 +131,47 @@ function CommitteeDashboard() {
                             <th>Contact No.</th>
                         </tr>
                     </thead>
-                    <tbody id="member-list">
-                        {populateMembers()}
+                    <tbody>
+                        {committee.members.map((member, index) => (
+                            <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{member.name}</td>
+                                <td>{member.email}</td>
+                                <td>{member.contactNumber}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
 
             {showUpcomingMeetings && (
-                <section id="upcoming-meetings-section">
-                    <button
-                        type="button"
-                        className="close-btn"
-                        onClick={() => setShowUpcomingMeetings(false)}
-                    >
-                        x
-                    </button>
-                    <h2 style={{ textAlign: "center" }}>Upcoming Meetings</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Sl No.</th>
-                                <th>Topic</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="upcoming-meetings-tbody">
-                            {populateUpcomingMeetings()}
-                        </tbody>
-                    </table>
-                </section>
+                <div className="meetings upcoming">
+                    <h3>Upcoming Meetings</h3>
+                    {upcomingMeetings.length === 0 ? (
+                        <p>No upcoming meetings scheduled</p>
+                    ) : (
+                        <ul>
+                            {upcomingMeetings.map((meeting, index) => (
+                                <li key={index}>{meeting.title} - {meeting.date}</li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             )}
 
             {showRecentMeetings && (
-                <section id="recent-meetings-section">
-                    <button
-                        type="button"
-                        className="close-btn"
-                        onClick={() => setShowRecentMeetings(false)}
-                    >
-                        x
-                    </button>
-                    <h2 style={{ textAlign: "center" }}>Recent Meetings</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Sl No.</th>
-                                <th>Topic</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Minutes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recent-meetings-tbody">
-                            {populateRecentMeetings()}
-                        </tbody>
-                    </table>
-                </section>
-            )}
-
-            {showMinutesForm && (
-                <section id="minu">
-                    <form id="minutes">
-                        <button
-                            type="button"
-                            className="close-btn"
-                            onClick={() => setShowMinutesForm(false)}
-                        >
-                            x
-                        </button>
-                        <label htmlFor="detail">Enter the details:</label>
-                        <textarea id="detail" />
-                        <br />
-                        <br />
-                        <button type="button" id="save" onClick={() => setShowMinutesForm(false)}>
-                            Save
-                        </button>
-                        <button type="button" id="generate-pdf" onClick={generatePDF}>
-                            Generate PDF
-                        </button>
-                        <button type="button" className="suggest" >Suggest Changes</button>
-                        <button type="button" className="notify" >Save and Notify</button>
-                    </form>
-                </section>
+                <div className="meetings recent">
+                    <h3>Recent Meetings</h3>
+                    {recentMeetings.length === 0 ? (
+                        <p>No recent meetings</p>
+                    ) : (
+                        <ul>
+                            {recentMeetings.map((meeting, index) => (
+                                <li key={index}>{meeting.title} - {meeting.date}</li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             )}
         </div>
     );

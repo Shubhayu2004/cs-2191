@@ -30,6 +30,8 @@ const App = () => {
           <Route path="/committee" element={<CommitteeApp />} />
           <Route path="/committeeDashboard" element={<CommitteeDashboard />} />
           <Route path="/manage-users" element={<ManageUsers />} />
+          <Route path="/committeeDashboard/:id" element={<CommitteeDashboard />} />
+
           <Route path="/home" element={
             <UserProtectWrapper>
               <Home />

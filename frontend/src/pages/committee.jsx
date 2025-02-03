@@ -19,24 +19,36 @@ const CommitteeeApp = () => {
 
   const fetchCommittees = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/committees');
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setCommittees(response.data);
     } catch (error) {
       console.error('Error fetching committees:', error);
     }
   };
-
+  
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:4000/api/committees/create', {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/committees/create`, {
         committeeName,
         committeePurpose,
         chairman,
         convener,
         members,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
       setCommittees([...committees, response.data]);
+      setIsCommitteeVisible(false);
+      // Reset form
       setCommitteeName('');
       setCommitteePurpose('');
       setChairman({ name: '', email: '', contactNumber: '' });
@@ -62,11 +74,11 @@ const CommitteeeApp = () => {
       <tr key={index}>
         <td>{index + 1}</td>
         <td>
-          <Link to="/committeeDashboard">{com.committeeName}</Link>
+          <Link to={`/committeeDashboard/${com._id}`}>{com.committeeName}</Link>
         </td>
       </tr>
     ));
-  };
+};
 
   return (
     <div className="committee-app">
