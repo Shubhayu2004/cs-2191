@@ -1,5 +1,6 @@
-import "../styles/scheduleMeeting.css"; 
-import React, { useState } from 'react';
+import styles from "../styles/scheduleMeeting.module.css";
+import React, { useState, useEffect } from "react";
+
 
 const ScheduleMeeting = () => {
     const [scheduleMeetingVisibility, setScheduleMeetingVisibility] = useState(false);
@@ -13,6 +14,12 @@ const ScheduleMeeting = () => {
     });
     const committee = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     const [selectedCommittees, setSelectedCommittees] = useState([]);
+    const [meetings, setMeetings] = useState([]);
+
+    useEffect(() => {
+        const storedMeetings = JSON.parse(localStorage.getItem('meetings')) || [];
+        setMeetings(storedMeetings);
+    }, []);
 
     const toggleScheduleMeetingVisibility = () => {
         setScheduleMeetingVisibility(!scheduleMeetingVisibility);
@@ -40,6 +47,11 @@ const ScheduleMeeting = () => {
         const { title, date, startTime } = formData;
 
         if (title && date && startTime) {
+            const newMeeting = { ...formData, selectedCommittees };
+            const updatedMeetings = [...meetings, newMeeting];
+            setMeetings(updatedMeetings);
+            localStorage.setItem('meetings', JSON.stringify(updatedMeetings));
+
             alert(`Meeting Scheduled: ${title} on ${date} at ${startTime}`);
             setFormData({
                 title: '',
@@ -56,24 +68,22 @@ const ScheduleMeeting = () => {
     };
 
     return (
-        <div className="schedule-meeting-container">
-            <button className="btnformeeting" onClick={toggleScheduleMeetingVisibility}>
+        <div className={styles.scheduleMeetingContainer}>
+            <button className={styles.btnForMeeting} onClick={toggleScheduleMeetingVisibility}>
                 Schedule A Meeting
             </button>
-
+            <a href="/scheduleCalendar" className={styles.btnForMeeting}>View Schedule</a>
             {scheduleMeetingVisibility && (
-                <section id="scheduleMeetingForm">
-                    <button className="btnformeeting" onClick={toggleCommitteeList}>
+                <section className={styles.scheduleMeetingForm}>
+                    <button className={styles.btnForMeeting} onClick={toggleCommitteeList}>
                         Select Committee
                     </button>
                     {showCommitteeList && (
-                        <div className="committee-listformeeting">
+                        <div className={styles.committeeListForMeeting}>
                             {committee.map((member) => (
                                 <div
                                     key={member}
-                                    className={`committeeformeeting ${
-                                        selectedCommittees.includes(member) ? 'selected' : ''
-                                    }`}
+                                    className={`${styles.committeeForMeeting} ${selectedCommittees.includes(member) ? styles.selected : ''}`}
                                 >
                                     <input
                                         type="checkbox"
@@ -136,12 +146,14 @@ const ScheduleMeeting = () => {
                             onChange={handleInputChange}
                         ></textarea>
 
-                        <button className="btnformeeting" type="submit">
+                        <button className={styles.btnForMeeting} type="submit">
                             Schedule Meeting
                         </button>
                     </form>
                 </section>
             )}
+
+
         </div>
     );
 };

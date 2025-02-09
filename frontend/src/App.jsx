@@ -8,6 +8,7 @@ import WelcomePage from "./pages/welcome.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/Registerpage.jsx";
 import ScheduleMeeting from "./pages/scheduleMeeting.jsx";
+import ScheduleCalendar from "./pages/scheduleCalendar.jsx"
 import UserProtectWrapper from "./pages/userProtectWrapper.jsx";
 import UserLogout from "./pages/UserLogout.jsx";
 import ManageUsers from "./pages/ManageUsers.jsx";
@@ -24,7 +25,8 @@ const App = () => {
           <Route path="/" element={<WelcomePage />} />
 
           {/* Other defined routes */}
-          <Route path="/Schedule_meeting" element={<ScheduleMeeting />} />
+          <Route path="/scheduleMeeting" element={<ScheduleMeeting />} />
+          <Route path="/scheduleCalendar" element={<ScheduleCalendar />} />
           <Route path="/Login" element={<LoginPage />} />
           <Route path="/Register" element={<RegisterPage />} />
           <Route path="/committee" element={<CommitteeApp />} />
