@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import "../styles/committee.css";
 
+
 const CommitteeeApp = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCommitteeVisible, setIsCommitteeVisible] = useState(false);
@@ -95,8 +96,8 @@ const CommitteeeApp = () => {
         )}
       </div>
       <div className="main-content">
-        <h1>Committees</h1>
-        <button onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}>
+        <h1 className="box"> Create Committees</h1>
+        <button  className="form"onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}>
           {isCommitteeVisible ? 'Hide Form' : 'Show Form'}
         </button>
         {isCommitteeVisible && (
@@ -194,9 +195,9 @@ const CommitteeeApp = () => {
                   />
                 </div>
               ))}
-              <button type="button" onClick={addMember}>Add Member</button>
+              <button className="addmemberbtn"type="button" onClick={addMember}>Add Member</button>
             </div>
-            <button type="submit">Create Committee</button>
+            <button className="committeebtn"type="submit">Create Committee</button>
           </form>
         )}
         <table>
