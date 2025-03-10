@@ -6,7 +6,7 @@ import "../styles/committeeDash.css";
 function CommitteeDashboard() {
     const navigate = useNavigate();
     const { id } = useParams();
-    
+
     const [committee, setCommittee] = useState({
         committeeName: '',
         committeePurpose: '',
@@ -34,7 +34,7 @@ function CommitteeDashboard() {
                 const response = await axios.get(
                     `${import.meta.env.VITE_BASE_URL}/api/committees/${id}`,
                     {
-                        headers: { 
+                        headers: {
                             Authorization: `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         }
@@ -90,7 +90,7 @@ function CommitteeDashboard() {
                     <h3 id="purp">Purpose:</h3>
                     <p id="purpose">{committee.committeePurpose}</p>
                 </div>
-                
+
                 <div className="chief">
                     <div className="chairman">
                         <h4>Chairperson</h4>
@@ -98,7 +98,7 @@ function CommitteeDashboard() {
                         <p>Email: {committee.chairman.email}</p>
                         <p>Contact: {committee.chairman.contactNumber}</p>
                     </div>
-                    
+
                     <div className="convener">
                         <h4>Convener</h4>
                         <p>Name: {committee.convener.name}</p>
@@ -109,9 +109,12 @@ function CommitteeDashboard() {
             </div>
 
             <div className="utility">
-                <button onClick={() => toggleSection(setShowUpcomingMeetings)}>
-                    {showUpcomingMeetings ? 'Hide' : 'Show'} Upcoming Meetings
-                </button>
+                <a href="/scheduleMeeting" className="schedule-btn">
+                    ScheduleMeeting
+                </a>
+                <a href="/scheduleCalendar" className="upcoming-btn">
+                    Upcoming Meetings
+                </a>
                 <button onClick={() => toggleSection(setShowRecentMeetings)}>
                     {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
                 </button>

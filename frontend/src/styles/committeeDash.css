@@ -11,7 +11,8 @@
   min-height: 100vh;
 }
 
-button {
+button,
+.schedule-btn {
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -123,18 +124,36 @@ li {
 
 .utility button:hover,
 #save:hover,
-.notify:hover {
+.notify:hover,
+.committeeDash .upcoming-btn:hover {
   background-color: #219b13;
 }
 
-.utility #leave {
+.committeeDash .upcoming-btn {
+  text-decoration: none;
+  background-color: #1e8313;
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+
+.utility .leave-btn {
   margin-left: auto;
   margin-right: 12px;
   background-color: rgb(198, 1, 1);
   color: #fff;
 }
 
-.utility #leave:hover {
+.utility .leave-btn:hover {
   background-color: rgb(255, 0, 0);
   color: #fff;
 }
@@ -151,6 +170,16 @@ li {
   margin: 20px 0 10px 0;
   padding: 10px;
   background-color: rgb(209, 207, 207);
+}
+
+.schedule-btn {
+  background-color: #007bff;
+  text-decoration: none;
+}
+
+.schedule-btn:hover {
+  background-color: #0056b3;
+
 }
 
 table {
