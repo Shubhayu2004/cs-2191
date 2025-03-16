@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect, useContext } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
 import "../styles/committee.css";
-
+import { UserDataContext } from '../context/UserContext';
 
 const CommitteeeApp = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCommitteeVisible, setIsCommitteeVisible] = useState(false);
-  const [committeeName, setCommitteeName] = useState('');
-  const [committeePurpose, setCommitteePurpose] = useState('');
-  const [chairman, setChairman] = useState({ name: '', email: '', contactNumber: '' });
-  const [convener, setConvener] = useState({ name: '', email: '', contactNumber: '' });
+  const [committeeName, setCommitteeName] = useState("");
+  const [committeePurpose, setCommitteePurpose] = useState("");
+  const [chairman, setChairman] = useState({ name: "", email: "", contactNumber: "" });
+  const [convener, setConvener] = useState({ name: "", email: "", contactNumber: "" });
   const [members, setMembers] = useState([]);
   const [committees, setCommittees] = useState([]);
+  const { user } = useContext(UserDataContext); // Get user data from context
 
   useEffect(() => {
     fetchCommittees();
@@ -20,43 +21,47 @@ const CommitteeeApp = () => {
 
   const fetchCommittees = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       setCommittees(response.data);
     } catch (error) {
-      console.error('Error fetching committees:', error);
+      console.error("Error fetching committees:", error);
     }
   };
-  
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/committees/create`, {
-        committeeName,
-        committeePurpose,
-        chairman,
-        convener,
-        members,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/committees/create`,
+        {
+          committeeName,
+          committeePurpose,
+          chairman,
+          convener,
+          members,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
       setCommittees([...committees, response.data]);
       setIsCommitteeVisible(false);
       // Reset form
-      setCommitteeName('');
-      setCommitteePurpose('');
-      setChairman({ name: '', email: '', contactNumber: '' });
-      setConvener({ name: '', email: '', contactNumber: '' });
+      setCommitteeName("");
+      setCommitteePurpose("");
+      setChairman({ name: "", email: "", contactNumber: "" });
+      setConvener({ name: "", email: "", contactNumber: "" });
       setMembers([]);
     } catch (error) {
-      console.error('Error creating committee:', error);
+      console.error("Error creating committee:", error);
     }
   };
 
@@ -67,7 +72,7 @@ const CommitteeeApp = () => {
   };
 
   const addMember = () => {
-    setMembers([...members, { name: '', email: '', contactNumber: '' }]);
+    setMembers([...members, { name: "", email: "", contactNumber: "" }]);
   };
 
   const populateCom = () => {
@@ -79,13 +84,13 @@ const CommitteeeApp = () => {
         </td>
       </tr>
     ));
-};
+  };
 
   return (
     <div className="committee-app">
       <div className="sidebar">
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          {isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
         </button>
         {isSidebarOpen && (
           <div className="sidebar-content">
@@ -96,11 +101,16 @@ const CommitteeeApp = () => {
         )}
       </div>
       <div className="main-content">
-        <h1 className="box"> Create Committees</h1>
-        <button  className="form"onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}>
-          {isCommitteeVisible ? 'Hide Form' : 'Show Form'}
-        </button>
-        {isCommitteeVisible && (
+        <h1 className="box">Create Committees</h1>
+
+        {/* Show/Hide Form button only if the user is an admin */}
+        {user?.status === "admin" && (
+          <button className="form" onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}>
+            {isCommitteeVisible ? "Hide Form" : "Show Form"}
+          </button>
+        )}
+
+        {isCommitteeVisible && user?.status === "admin" && (
           <form onSubmit={handleFormSubmit}>
             <div>
               <label>Committee Name:</label>
@@ -176,28 +186,32 @@ const CommitteeeApp = () => {
                     type="text"
                     placeholder="Name"
                     value={member.name}
-                    onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
+                    onChange={(e) => handleMemberChange(index, "name", e.target.value)}
                     required
                   />
                   <input
                     type="email"
                     placeholder="Email"
                     value={member.email}
-                    onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
+                    onChange={(e) => handleMemberChange(index, "email", e.target.value)}
                     required
                   />
                   <input
                     type="text"
                     placeholder="Contact Number"
                     value={member.contactNumber}
-                    onChange={(e) => handleMemberChange(index, 'contactNumber', e.target.value)}
+                    onChange={(e) => handleMemberChange(index, "contactNumber", e.target.value)}
                     required
                   />
                 </div>
               ))}
-              <button className="addmemberbtn"type="button" onClick={addMember}>Add Member</button>
+              <button className="addmemberbtn" type="button" onClick={addMember}>
+                Add Member
+              </button>
             </div>
-            <button className="committeebtn"type="submit">Create Committee</button>
+            <button className="committeebtn" type="submit">
+              Create Committee
+            </button>
           </form>
         )}
         <table>
@@ -207,9 +221,7 @@ const CommitteeeApp = () => {
               <th>Committee Name</th>
             </tr>
           </thead>
-          <tbody>
-            {populateCom()}
-          </tbody>
+          <tbody>{populateCom()}</tbody>
         </table>
       </div>
     </div>
