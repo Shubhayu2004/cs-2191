@@ -1,8 +1,8 @@
+import { UserDataContext } from '../context/UserContext';
 import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import "../styles/committee.css";
-
 
 const CommitteeeApp = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,6 +13,7 @@ const CommitteeeApp = () => {
   const [convener, setConvener] = useState({ name: '', email: '', contactNumber: '' });
   const [members, setMembers] = useState([]);
   const [committees, setCommittees] = useState([]);
+  const { user } = React.useContext(UserDataContext);
 
   useEffect(() => {
     fetchCommittees();
@@ -31,7 +32,7 @@ const CommitteeeApp = () => {
       console.error('Error fetching committees:', error);
     }
   };
-  
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -70,147 +71,97 @@ const CommitteeeApp = () => {
     setMembers([...members, { name: '', email: '', contactNumber: '' }]);
   };
 
-  const populateCom = () => {
-    return committees.map((com, index) => (
-      <tr key={index}>
-        <td>{index + 1}</td>
-        <td>
-          <Link to={`/committeeDashboard/${com._id}`}>{com.committeeName}</Link>
-        </td>
-      </tr>
-    ));
-};
+  const toggleFormVisibility = () => {
+    setIsCommitteeVisible(!isCommitteeVisible);
+  };
 
   return (
-    <div className="committee-app">
-      <div className="sidebar">
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          {isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
-        </button>
-        {isSidebarOpen && (
-          <div className="sidebar-content">
-            <Link to="/home">Home</Link>
-            <Link to="/committee">Committee</Link>
-            <Link to="/user/logout">Logout</Link>
+    <div className="committee">
+      <div className="main-content">
+        {user?.status === 'admin' && (
+          <div>
+            <button className="btn" onClick={toggleFormVisibility}>
+              {isCommitteeVisible ? 'Hide Form' : 'Show Form'}
+            </button>
+            <button className="addmemberbtn" onClick={addMember}>
+              Add Member
+            </button>
           </div>
         )}
-      </div>
-      <div className="main-content">
-        <h1 className="box"> Create Committees</h1>
-        <button  className="form"onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}>
-          {isCommitteeVisible ? 'Hide Form' : 'Show Form'}
-        </button>
         {isCommitteeVisible && (
-          <form onSubmit={handleFormSubmit}>
-            <div>
-              <label>Committee Name:</label>
-              <input
-                type="text"
-                value={committeeName}
-                onChange={(e) => setCommitteeName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label>Committee Purpose:</label>
-              <input
-                type="text"
-                value={committeePurpose}
-                onChange={(e) => setCommitteePurpose(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label>Chairman:</label>
-              <input
-                type="text"
-                placeholder="Name"
-                value={chairman.name}
-                onChange={(e) => setChairman({ ...chairman, name: e.target.value })}
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={chairman.email}
-                onChange={(e) => setChairman({ ...chairman, email: e.target.value })}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact Number"
-                value={chairman.contactNumber}
-                onChange={(e) => setChairman({ ...chairman, contactNumber: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label>Convener:</label>
-              <input
-                type="text"
-                placeholder="Name"
-                value={convener.name}
-                onChange={(e) => setConvener({ ...convener, name: e.target.value })}
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={convener.email}
-                onChange={(e) => setConvener({ ...convener, email: e.target.value })}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact Number"
-                value={convener.contactNumber}
-                onChange={(e) => setConvener({ ...convener, contactNumber: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label>Members:</label>
+          <form onSubmit={handleFormSubmit} className="create-committee">
+            <div className="box">
+              <div className="form-row">
+                <label>Committee Name:</label>
+                <input type="text" value={committeeName} onChange={(e) => setCommitteeName(e.target.value)} />
+              </div>
+              <div className="form-row">
+                <label>Committee Purpose:</label>
+                <textarea value={committeePurpose} onChange={(e) => setCommitteePurpose(e.target.value)} />
+              </div>
+              <div className="form-row">
+                <label>Chairman Name:</label>
+                <input type="text" value={chairman.name} onChange={(e) => setChairman({ ...chairman, name: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <label>Chairman Email:</label>
+                <input type="email" value={chairman.email} onChange={(e) => setChairman({ ...chairman, email: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <label>Chairman Contact Number:</label>
+                <input type="text" value={chairman.contactNumber} onChange={(e) => setChairman({ ...chairman, contactNumber: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <label>Convener Name:</label>
+                <input type="text" value={convener.name} onChange={(e) => setConvener({ ...convener, name: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <label>Convener Email:</label>
+                <input type="email" value={convener.email} onChange={(e) => setConvener({ ...convener, email: e.target.value })} />
+              </div>
+              <div className="form-row">
+                <label>Convener Contact Number:</label>
+                <input type="text" value={convener.contactNumber} onChange={(e) => setConvener({ ...convener, contactNumber: e.target.value })} />
+              </div>
               {members.map((member, index) => (
                 <div key={index}>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={member.name}
-                    onChange={(e) => handleMemberChange(index, 'name', e.target.value)}
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={member.email}
-                    onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Contact Number"
-                    value={member.contactNumber}
-                    onChange={(e) => handleMemberChange(index, 'contactNumber', e.target.value)}
-                    required
-                  />
+                  <div className="form-row">
+                    <label>Member {index + 1} Name:</label>
+                    <input type="text" value={member.name} onChange={(e) => handleMemberChange(index, 'name', e.target.value)} />
+                  </div>
+                  <div className="form-row">
+                    <label>Member {index + 1} Email:</label>
+                    <input type="email" value={member.email} onChange={(e) => handleMemberChange(index, 'email', e.target.value)} />
+                  </div>
+                  <div className="form-row">
+                    <label>Member {index + 1} Contact Number:</label>
+                    <input type="text" value={member.contactNumber} onChange={(e) => handleMemberChange(index, 'contactNumber', e.target.value)} />
+                  </div>
                 </div>
               ))}
-              <button className="addmemberbtn"type="button" onClick={addMember}>Add Member</button>
+              <button type="submit" className="committeebtn">
+                Create Committee
+              </button>
             </div>
-            <button className="committeebtn"type="submit">Create Committee</button>
           </form>
         )}
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Committee Name</th>
-            </tr>
-          </thead>
-          <tbody>
-            {populateCom()}
-          </tbody>
-        </table>
+        {/* Display committees */}
+        <div className="box">
+          {committees.map((committee, index) => (
+            <div key={index}>
+              <h3>Committee Name: {committee.committeeName}</h3>
+              <p>Committee Purpose: {committee.committeePurpose}</p>
+              <p>Chairman: {committee.chairman.name}</p>
+              <p>Convener: {committee.convener.name}</p>
+              <h4>Members:</h4>
+              {committee.members.map((member, memberIndex) => (
+                <div key={memberIndex}>
+                  <p>Member {memberIndex + 1}: {member.name}</p>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
