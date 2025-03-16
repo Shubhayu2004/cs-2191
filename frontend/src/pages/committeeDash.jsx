@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import "../styles/committeeDash.css";
+import { UserDataContext } from "../context/UserContext"; 
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { user } = useContext(UserDataContext); // Get user data
 
     const [committee, setCommittee] = useState({
-        committeeName: '',
-        committeePurpose: '',
-        chairman: { name: '', email: '', contactNumber: '' },
-        convener: { name: '', email: '', contactNumber: '' },
+        committeeName: "",
+        committeePurpose: "",
+        chairman: { name: "", email: "", contactNumber: "" },
+        convener: { name: "", email: "", contactNumber: "" },
         members: []
     });
+
     const [upcomingMeetings, setUpcomingMeetings] = useState([]);
     const [recentMeetings, setRecentMeetings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,27 +27,27 @@ function CommitteeDashboard() {
     useEffect(() => {
         const fetchCommitteeData = async () => {
             if (!id) {
-                setError('No committee ID provided');
+                setError("No committee ID provided");
                 setLoading(false);
                 return;
             }
 
             try {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem("token");
                 const response = await axios.get(
                     `${import.meta.env.VITE_BASE_URL}/api/committees/${id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json'
+                            "Content-Type": "application/json"
                         }
                     }
                 );
                 setCommittee(response.data);
                 setLoading(false);
             } catch (err) {
-                console.error('Error fetching committee:', err);
-                setError(err.response?.data?.message || 'Error loading committee');
+                console.error("Error fetching committee:", err);
+                setError(err.response?.data?.message || "Error loading committee");
                 setLoading(false);
             }
         };
@@ -56,32 +59,28 @@ function CommitteeDashboard() {
     if (error) return <div>Error: {error}</div>;
     if (!committee) return <div>No committee found</div>;
 
-
     const toggleSection = (setter) => {
-        setter(prev => !prev);
+        setter((prev) => !prev);
     };
 
     const handleLeaveCommittee = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem("token");
             await axios.post(
                 `${import.meta.env.VITE_BASE_URL}/api/committees/${id}/leave`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            navigate('/committee');
+            navigate("/committee");
         } catch (err) {
             setError(err.message);
         }
     };
 
-    if (loading) return <div className="loading">Loading...</div>;
-    if (error) return <div className="error">Error: {error}</div>;
-
     return (
         <div className="committeeDash">
             <div className="back">
-                <button onClick={() => navigate('/committee')}>Go Back</button>
+                <button onClick={() => navigate("/committee")}>Go Back</button>
             </div>
 
             <div className="primary">
@@ -109,15 +108,21 @@ function CommitteeDashboard() {
             </div>
 
             <div className="utility">
-                <a href="/scheduleMeeting" className="schedule-btn">
-                    ScheduleMeeting
-                </a>
+                {/* Show the Schedule Meeting button only for the convener */}
+                {user?.status === committee.convenor && (
+                    <a href="/scheduleMeeting" className="schedule-btn">
+                        Schedule Meeting
+                    </a>
+                )}
+
                 <a href="/scheduleCalendar" className="upcoming-btn">
                     Upcoming Meetings
                 </a>
+
                 <button onClick={() => toggleSection(setShowRecentMeetings)}>
-                    {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
+                    {showRecentMeetings ? "Hide" : "Show"} Recent Meetings
                 </button>
+
                 <button onClick={handleLeaveCommittee} className="leave-btn">
                     Leave Committee
                 </button>
@@ -155,7 +160,9 @@ function CommitteeDashboard() {
                     ) : (
                         <ul>
                             {upcomingMeetings.map((meeting, index) => (
-                                <li key={index}>{meeting.title} - {meeting.date}</li>
+                                <li key={index}>
+                                    {meeting.title} - {meeting.date}
+                                </li>
                             ))}
                         </ul>
                     )}
@@ -170,7 +177,9 @@ function CommitteeDashboard() {
                     ) : (
                         <ul>
                             {recentMeetings.map((meeting, index) => (
-                                <li key={index}>{meeting.title} - {meeting.date}</li>
+                                <li key={index}>
+                                    {meeting.title} - {meeting.date}
+                                </li>
                             ))}
                         </ul>
                     )}
