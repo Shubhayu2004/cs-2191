@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import "../styles/committeeDash.css";
+import { UserDataContext } from '../context/UserContext';
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ function CommitteeDashboard() {
         members: []
     });
     const [upcomingMeetings, setUpcomingMeetings] = useState([]);
+    const { user } = useContext(UserDataContext); 
 
     // Dummy data for testing
     const dummyRecentMeetings = [
@@ -171,19 +173,26 @@ function CommitteeDashboard() {
             </div>
 
             <div className="utility">
-                <a href="/scheduleMeeting" className="schedule-btn">
-                    ScheduleMeeting
-                </a>
-                <a href="/scheduleCalendar" className="upcoming-btn">
-                    Upcoming Meetings
-                </a>
-                <button onClick={() => toggleSection(setShowRecentMeetings)}>
-                    {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
-                </button>
-                <button onClick={handleLeaveCommittee} className="leave-btn">
-                    Leave Committee
-                </button>
-            </div>
+    {/* Show Schedule Meeting button only if user is a convener */}
+    {user?.status === "convener" && (
+        <a href="/scheduleMeeting" className="schedule-btn">
+            Schedule Meeting
+        </a>
+    )}
+
+    <a href="/scheduleCalendar" className="upcoming-btn">
+        Upcoming Meetings
+    </a>
+    
+    <button onClick={() => toggleSection(setShowRecentMeetings)}>
+        {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
+    </button>
+    
+    <button onClick={handleLeaveCommittee} className="leave-btn">
+        Leave Committee
+    </button>
+</div>
+
 
             <div className="members">
                 <h2>Committee Members</h2>
@@ -208,21 +217,6 @@ function CommitteeDashboard() {
                     </tbody>
                 </table>
             </div>
-
-            {/* {showUpcomingMeetings && (
-                <div className="meetings upcoming">
-                    <h3>Upcoming Meetings</h3>
-                    {upcomingMeetings.length === 0 ? (
-                        <p>No upcoming meetings scheduled</p>
-                    ) : (
-                        <ul>
-                            {upcomingMeetings.map((meeting, index) => (
-                                <li key={index}>{meeting.title} - {meeting.date}</li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            )} */}
 
             {showRecentMeetings && (
                 <section className="recent-meetings-section">
@@ -270,24 +264,31 @@ function CommitteeDashboard() {
                 </section>
             )}
 
-            {showMinutes && (
-                <section id="minu">
-                    <form id="minutes">
-                        <button type="button" className="close-btn" onClick={closeMinutes}>✕</button>
-                        <label htmlFor="detail">Meeting Minutes:</label>
-                        <textarea
-                            id="detail"
-                            value={editedMinutes}
-                            onChange={(e) => setEditedMinutes(e.target.value)}
-                        ></textarea>
-                        <br /><br />
-                        <button type="button" id="save" onClick={handleSaveMinutes}>Save</button>
-                        <button type="button" id="generate-pdf" onClick={handleGeneratePDF}>
-                            Generate PDF
-                        </button>
-                    </form>
-                </section>
+{showMinutes && (
+    <section id="minu">
+        <form id="minutes">
+            <button type="button" className="close-btn" onClick={closeMinutes}>✕</button>
+            <label htmlFor="detail">Meeting Minutes:</label>
+            <textarea
+                id="detail"
+                value={editedMinutes}
+                onChange={(e) => setEditedMinutes(e.target.value)}
+                readOnly={user?.status !== "chairman"} // Prevent editing for non-chairman users
+            ></textarea>
+            <br /><br />
+            
+            {/* Only show save button if the user is the chairman */}
+            {user?.status === "chairman" && (
+                <button type="button" id="save" onClick={handleSaveMinutes}>Save</button>
             )}
+
+            <button type="button" id="generate-pdf" onClick={handleGeneratePDF}>
+                Generate PDF
+            </button>
+        </form>
+    </section>
+)}
+
 
 
         </div>
