@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { jsPDF } from "jspdf";
 import "../styles/committeeDash.css";
 
 function CommitteeDashboard() {
@@ -15,12 +16,73 @@ function CommitteeDashboard() {
         members: []
     });
     const [upcomingMeetings, setUpcomingMeetings] = useState([]);
-    const [recentMeetings, setRecentMeetings] = useState([]);
+
+    // Dummy data for testing
+    const dummyRecentMeetings = [
+        {
+            topic: "Budget Planning",
+            date: "2024-03-10",
+            time: "10:00 AM",
+            minutesText: "Discussed allocation of funds for upcoming projects and reviewed last quarter's expenses."
+        },
+        {
+            topic: "Annual Report Discussion",
+            date: "2024-03-15",
+            time: "2:30 PM",
+            minutesText: "Reviewed department performance, proposed improvements, and finalized the annual report format."
+        },
+        {
+            topic: "Event Coordination",
+            date: "2024-03-20",
+            time: "11:00 AM",
+            minutesText: "Planned logistics, assigned roles, and confirmed the venue for the upcoming seminar."
+        }
+    ];
+
+
+    const [recentMeetings, setRecentMeetings] = useState(dummyRecentMeetings); //will be fetched from the backend
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showUpcomingMeetings, setShowUpcomingMeetings] = useState(false);
     const [showRecentMeetings, setShowRecentMeetings] = useState(false);
+    const [selectedMinutes, setSelectedMinutes] = useState(""); // Stores the clicked meeting's minutes text
+    const [showMinutes, setShowMinutes] = useState(false);
+    const [editedMinutes, setEditedMinutes] = useState(""); // Stores the edited text
+    const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null); // Stores the index of the meeting being edited
 
+    const handleViewMinutes = (minutesText, index) => {
+        setSelectedMinutes(minutesText);
+        setEditedMinutes(minutesText); // Allow editing
+        setSelectedMeetingIndex(index); // Store index for saving
+        setShowMinutes(true);
+    };
+
+    const handleSaveMinutes = () => {
+        if (selectedMeetingIndex === null) return;
+
+        const updatedMeetings = [...recentMeetings];
+        updatedMeetings[selectedMeetingIndex].minutesText = editedMinutes;
+        setRecentMeetings(updatedMeetings);
+
+        setShowMinutes(false);
+        setSelectedMeetingIndex(null);
+    };
+
+
+
+    const closeMinutes = () => {
+        setShowMinutes(false);
+        setSelectedMinutes("");
+    };
+    const handleGeneratePDF = () => {
+        if (!selectedMinutes) return;
+        const doc = new jsPDF();
+        const maxWidth = 190;
+        const textLines = doc.splitTextToSize(selectedMinutes, maxWidth);
+        doc.text(textLines, 10, 10);
+        doc.save("minutes.pdf");
+    };
     useEffect(() => {
         const fetchCommitteeData = async () => {
             if (!id) {
@@ -147,7 +209,7 @@ function CommitteeDashboard() {
                 </table>
             </div>
 
-            {showUpcomingMeetings && (
+            {/* {showUpcomingMeetings && (
                 <div className="meetings upcoming">
                     <h3>Upcoming Meetings</h3>
                     {upcomingMeetings.length === 0 ? (
@@ -160,22 +222,74 @@ function CommitteeDashboard() {
                         </ul>
                     )}
                 </div>
-            )}
+            )} */}
 
             {showRecentMeetings && (
-                <div className="meetings recent">
-                    <h3>Recent Meetings</h3>
-                    {recentMeetings.length === 0 ? (
-                        <p>No recent meetings</p>
-                    ) : (
-                        <ul>
-                            {recentMeetings.map((meeting, index) => (
-                                <li key={index}>{meeting.title} - {meeting.date}</li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
+                <section className="recent-meetings-section">
+                    <button className="close-btn" onClick={() => setShowRecentMeetings(false)}>
+                        ✕
+                    </button>
+                    <h2 style={{ textAlign: "center" }}>Recent Meetings</h2>
+                    <table>
+                        <thead>
+                            <tr >
+                                <th>Sl No.</th>
+                                <th>Topic</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Minutes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recentMeetings.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" style={{ textAlign: "center" }}>
+                                        No recent meetings
+                                    </td>
+                                </tr>
+                            ) : (
+                                recentMeetings.map((meeting, index) => (
+                                    <tr key={index}>
+                                        <td>{index + 1}</td>
+                                        <td>{meeting.topic}</td>
+                                        <td>{meeting.date}</td>
+                                        <td>{meeting.time}</td>
+                                        <td>
+
+                                            <button onClick={() => handleViewMinutes(meeting.minutesText, index)} className="minutes-button">
+                                                View Minutes
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </section>
             )}
+
+            {showMinutes && (
+                <section id="minu">
+                    <form id="minutes">
+                        <button type="button" className="close-btn" onClick={closeMinutes}>✕</button>
+                        <label htmlFor="detail">Meeting Minutes:</label>
+                        <textarea
+                            id="detail"
+                            value={editedMinutes}
+                            onChange={(e) => setEditedMinutes(e.target.value)}
+                        ></textarea>
+                        <br /><br />
+                        <button type="button" id="save" onClick={handleSaveMinutes}>Save</button>
+                        <button type="button" id="generate-pdf" onClick={handleGeneratePDF}>
+                            Generate PDF
+                        </button>
+                    </form>
+                </section>
+            )}
+
+
         </div>
     );
 }
