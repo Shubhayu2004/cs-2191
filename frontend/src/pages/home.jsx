@@ -64,9 +64,6 @@ const Home = () => {
             <p>
               <i className="fas fa-envelope"></i> Status: {user?.status || 'N/A'}
             </p>
-            <p>
-              <i className={styles.fas_fa_briefcase}></i> Role: Head Of the Department, CST
-            </p>
 
        
           </div>

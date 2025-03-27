@@ -1,26 +1,39 @@
-import React, { createContext, useState } from 'react'
+import React, { createContext, useState, useContext } from 'react'
 
 export const UserDataContext = createContext()
 
+export const useAuth = () => {
+    const context = useContext(UserDataContext);
+    if (!context) {
+        throw new Error('useAuth must be used within a UserContext provider');
+    }
+    return context;
+}
 
 const UserContext = ({ children }) => {
-
-    const [ user, setUser ] = useState({
+    const [user, setUser] = useState({
         email: '',
         fullName: {
             firstName: '',
             lastName: '',
             status: ''
         }
-    })
+    });
+
+    const [token, setToken] = useState(localStorage.getItem('token'));
+
+    const value = {
+        user,
+        setUser,
+        token,
+        setToken
+    };
 
     return (
-        <div>
-            <UserDataContext.Provider value={{ user, setUser }}>
-                {children}
-            </UserDataContext.Provider>
-        </div>
-    )
+        <UserDataContext.Provider value={value}>
+            {children}
+        </UserDataContext.Provider>
+    );
 }
 
-export default UserContext
+export default UserContext;

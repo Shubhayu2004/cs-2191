@@ -74,22 +74,35 @@ module.exports.updateUserRole = async (req, res) => {
     const { role } = req.body;
 
     try {
-        const user = await User.findById(id);
-        if (!user) return res.status(404).send('User not found.');
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
 
         user.status = role;
         await user.save();
 
-        res.status(200).send('User role updated successfully.');
+        return res.status(200).json({ 
+            message: 'User role updated successfully.',
+            user: {
+                _id: user._id,
+                email: user.email,
+                status: user.status,
+                fullname: user.fullname
+            }
+        });
     } catch (err) {
-        res.status(500).send('Server error.');
+        console.error('Role update error:', err);
+        return res.status(500).json({ message: 'Server error.' });
     }
 }
+
 module.exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find().select('-password');
-        res.status(200).json(users);
+        const users = await userModel.find().select('-password');
+        return res.status(200).json(users);
     } catch (err) {
-        res.status(500).send('Server error.');
+        console.error('Get users error:', err);
+        return res.status(500).json({ message: 'Server error.' });
     }
-}   
+}

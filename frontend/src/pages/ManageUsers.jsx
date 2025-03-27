@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import '../styles/ManageUsers.css';
+import axiosInstance from '../axios.config';
+import { useAuth } from '../context/UserContext';
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
@@ -12,26 +11,23 @@ const ManageUsers = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/users`, {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
+                console.log('Token:', localStorage.getItem('token'));
+                const response = await axiosInstance.get('/users/users');
                 if (response.data && Array.isArray(response.data)) {
                     setUsers(response.data);
                 } else {
                     setError('Invalid data received from server');
                 }
             } catch (error) {
-                setError(error.message);
-                console.error('Error fetching users:', error);
+                console.log('Request headers:', error.config?.headers);
+                console.log('Response status:', error.response?.status);
+                console.log('Response data:', error.response?.data);
+                setError(error.response?.data?.message || 'Failed to fetch users');
             } finally {
                 setLoading(false);
             }
         };
-
+    
         if (token) {
             fetchUsers();
         }
@@ -39,22 +35,22 @@ const ManageUsers = () => {
 
     const handleRoleChange = async (userId, newRole) => {
         try {
-            await axios.put(`http://localhost:4000/update-role/${userId}`, 
-                { role: newRole }, 
-                {
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            setUsers(users.map(user => 
-                user._id === userId ? { ...user, status: newRole } : user
-            ));
+            const response = await axiosInstance.put(`/users/update-role/${userId}`, { 
+                role: newRole 
+            });
+
+            if (response.status === 200) {
+                setUsers(users.map(user => 
+                    user._id === userId ? { ...user, status: newRole } : user
+                ));
+                alert('Role updated successfully');
+            }
         } catch (error) {
-            console.error('Error updating user role:', error);
+            console.error('Error updating user role:', error.response?.data || error.message);
+            alert('Failed to update user role');
         }
     };
+
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
