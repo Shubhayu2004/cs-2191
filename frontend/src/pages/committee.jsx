@@ -3,20 +3,27 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import "../styles/committee.css";
 import { UserDataContext } from '../context/UserContext';
+import CommitteeForm from '../components/CommitteeForm';
+import Sidebar from '../components/Sidebar';
+import CommitteeList from '../components/CommitteeList';
 
-const CommitteeeApp = () => {
+const CommitteeApp = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCommitteeVisible, setIsCommitteeVisible] = useState(false);
-  const [committeeName, setCommitteeName] = useState("");
-  const [committeePurpose, setCommitteePurpose] = useState("");
-  const [chairman, setChairman] = useState({ name: "", email: "", contactNumber: "" });
-  const [convener, setConvener] = useState({ name: "", email: "", contactNumber: "" });
-  const [members, setMembers] = useState([]);
+  const [formData, setFormData] = useState({
+    committeeName: "",
+    committeePurpose: "",
+    chairman: { name: "", email: "", contactNumber: "" },
+    convenor: { name: "", email: "", contactNumber: "" },
+    members: []
+  });
   const [committees, setCommittees] = useState([]);
-  const { user } = useContext(UserDataContext); // Get user data from context
+  const [users, setUsers] = useState([]);
+  const { user } = useContext(UserDataContext);
 
   useEffect(() => {
     fetchCommittees();
+    fetchUsers();
   }, []);
 
   const fetchCommittees = async () => {
@@ -33,199 +40,88 @@ const CommitteeeApp = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/committees/create`,
+        formData,
         {
-          committeeName,
-          committeePurpose,
-          chairman,
-          convener,
-          members,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
-      setCommittees([...committees, response.data]);
+      setCommittees(prev => [...prev, response.data]);
       setIsCommitteeVisible(false);
-      // Reset form
-      setCommitteeName("");
-      setCommitteePurpose("");
-      setChairman({ name: "", email: "", contactNumber: "" });
-      setConvener({ name: "", email: "", contactNumber: "" });
-      setMembers([]);
+      setFormData({
+        committeeName: "",
+        committeePurpose: "",
+        chairman: { name: "", email: "", contactNumber: "" },
+        convenor: { name: "", email: "", contactNumber: "" },
+        members: []
+      });
     } catch (error) {
       console.error("Error creating committee:", error);
     }
   };
 
-  const handleMemberChange = (index, field, value) => {
-    const updatedMembers = [...members];
-    updatedMembers[index][field] = value;
-    setMembers(updatedMembers);
-  };
-
-  const addMember = () => {
-    setMembers([...members, { name: "", email: "", contactNumber: "" }]);
-  };
-
-  const populateCom = () => {
-    return committees.map((com, index) => (
-      <tr key={index}>
-        <td>{index + 1}</td>
-        <td>
-          <Link to={`/committeeDashboard/${com._id}`}>{com.committeeName}</Link>
-        </td>
-      </tr>
-    ));
-  };
-
   return (
     <div className="committee-app">
-      <div className="sidebar">
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          {isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-        </button>
-        {isSidebarOpen && (
-          <div className="sidebar-content">
-            <Link to="/home">Home</Link>
-            <Link to="/committee">Committee</Link>
-            <Link to="/user/logout">Logout</Link>
-          </div>
-        )}
-      </div>
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+      />
+      
       <div className="main-content">
         <h1 className="box">Create Committees</h1>
 
-        {/* Show/Hide Form button only if the user is an admin */}
         {user?.status === "admin" && (
-          <button className="form" onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}>
+          <button 
+            className="form" 
+            onClick={() => setIsCommitteeVisible(!isCommitteeVisible)}
+          >
             {isCommitteeVisible ? "Hide Form" : "Show Form"}
           </button>
         )}
 
         {isCommitteeVisible && user?.status === "admin" && (
-          <form onSubmit={handleFormSubmit}>
-            <div>
-              <label>Committee Name:</label>
-              <input
-                type="text"
-                value={committeeName}
-                onChange={(e) => setCommitteeName(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label>Committee Purpose:</label>
-              <input
-                type="text"
-                value={committeePurpose}
-                onChange={(e) => setCommitteePurpose(e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <label>Chairman:</label>
-              <input
-                type="text"
-                placeholder="Name"
-                value={chairman.name}
-                onChange={(e) => setChairman({ ...chairman, name: e.target.value })}
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={chairman.email}
-                onChange={(e) => setChairman({ ...chairman, email: e.target.value })}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact Number"
-                value={chairman.contactNumber}
-                onChange={(e) => setChairman({ ...chairman, contactNumber: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label>Convener:</label>
-              <input
-                type="text"
-                placeholder="Name"
-                value={convener.name}
-                onChange={(e) => setConvener({ ...convener, name: e.target.value })}
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={convener.email}
-                onChange={(e) => setConvener({ ...convener, email: e.target.value })}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Contact Number"
-                value={convener.contactNumber}
-                onChange={(e) => setConvener({ ...convener, contactNumber: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <label>Members:</label>
-              {members.map((member, index) => (
-                <div key={index}>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={member.name}
-                    onChange={(e) => handleMemberChange(index, "name", e.target.value)}
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={member.email}
-                    onChange={(e) => handleMemberChange(index, "email", e.target.value)}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Contact Number"
-                    value={member.contactNumber}
-                    onChange={(e) => handleMemberChange(index, "contactNumber", e.target.value)}
-                    required
-                  />
-                </div>
-              ))}
-              <button className="addmemberbtn" type="button" onClick={addMember}>
-                Add Member
-              </button>
-            </div>
-            <button className="committeebtn" type="submit">
-              Create Committee
-            </button>
-          </form>
+          <CommitteeForm
+            formData={formData}
+            users={users}
+            onSubmit={handleFormSubmit}
+            onChange={handleFormChange}
+            onAddMember={() => handleFormChange('members', [
+              ...formData.members, 
+              { name: "", email: "", contactNumber: "" }
+            ])}
+          />
         )}
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Committee Name</th>
-            </tr>
-          </thead>
-          <tbody>{populateCom()}</tbody>
-        </table>
+
+        <CommitteeList committees={committees} />
       </div>
     </div>
   );
 };
 
-export default CommitteeeApp;
+export default CommitteeApp;

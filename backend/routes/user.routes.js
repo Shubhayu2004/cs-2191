@@ -32,5 +32,6 @@ router.put('/update-role/:id', authMiddleware.authUser, authMiddleware.isAdmin, 
 
 router.get('/users', [authMiddleware.authUser, authMiddleware.isAdmin], userController.getAllUsers);
 
+router.get('/username', authMiddleware.authUser, userController.getUserNames);
 
 module.exports = router;

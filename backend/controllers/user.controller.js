@@ -96,7 +96,6 @@ module.exports.updateUserRole = async (req, res) => {
         return res.status(500).json({ message: 'Server error.' });
     }
 }
-
 module.exports.getAllUsers = async (req, res) => {
     try {
         const users = await userModel.find().select('-password');
@@ -105,4 +104,14 @@ module.exports.getAllUsers = async (req, res) => {
         console.error('Get users error:', err);
         return res.status(500).json({ message: 'Server error.' });
     }
+}
+module.exports.getUserNames = async (req, res) => {
+    try {
+        const users = await userModel.find().select('fullname email status');
+        return res.status(200).json(users.fullname);
+    } catch (err) {
+        console.error('Get user names error:', err);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+
 }

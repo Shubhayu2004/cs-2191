@@ -201,12 +201,11 @@
       text-align: left;
     }
     .addmemberbtn{
-      background-color: #007bff;
+      background-color: #28a745;
       color: white;
-      padding: 10px;
+      padding: 0.5rem 1rem;
       border: none;
       border-radius: 4px;
-      font-size: 16px;
       cursor: pointer;
       margin-top: 10px;
       margin-bottom: 10px;
@@ -215,14 +214,13 @@
     .committeebtn{
       background-color: #007bff;
       color: white;
-      padding: 10px;
+      padding: 0.75rem 1.5rem;
       border: none;
       border-radius: 4px;
-      font-size: 16px;
       cursor: pointer;
-      margin-top: 10px;
+      width: 100%;
+      margin-top: 1rem;
       margin-bottom: 10px;
-      width: 30%;
     }
     .main-content input[type="text"],
     .main-content input[type="number"],
@@ -325,4 +323,43 @@
       text-decoration: none;
       font-weight: 500;
       color: #320a72;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .member-inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
     }
