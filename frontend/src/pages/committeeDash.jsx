@@ -8,6 +8,7 @@ import { UserDataContext } from '../context/UserContext';
 function CommitteeDashboard() {
     const navigate = useNavigate();
     const { id } = useParams();
+    const { user } = useContext(UserDataContext);
 
     const [committee, setCommittee] = useState({
         committeeName: '',
@@ -16,11 +17,15 @@ function CommitteeDashboard() {
         convener: { name: '', email: '', contactNumber: '' },
         members: []
     });
-    const [upcomingMeetings, setUpcomingMeetings] = useState([]);
-    const { user } = useContext(UserDataContext); 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showRecentMeetings, setShowRecentMeetings] = useState(false);
+    const [selectedMinutes, setSelectedMinutes] = useState("");
+    const [showMinutes, setShowMinutes] = useState(false);
+    const [editedMinutes, setEditedMinutes] = useState("");
+    const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null);
 
-    // Dummy data for testing
-    const dummyRecentMeetings = [
+    const DUMMY_RECENT_MEETINGS = [
         {
             topic: "Budget Planning",
             date: "2024-03-10",
@@ -41,50 +46,13 @@ function CommitteeDashboard() {
         }
     ];
 
+    const [recentMeetings, setRecentMeetings] = useState(DUMMY_RECENT_MEETINGS);
 
-    const [recentMeetings, setRecentMeetings] = useState(dummyRecentMeetings); //will be fetched from the backend
+    const isChairman = user?.status === "chairman";
+    const isConvener = user?.status === "convener";
+    const canEditMinutes = isChairman;
+    const canScheduleMeetings = isChairman || isConvener;
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [showUpcomingMeetings, setShowUpcomingMeetings] = useState(false);
-    const [showRecentMeetings, setShowRecentMeetings] = useState(false);
-    const [selectedMinutes, setSelectedMinutes] = useState(""); // Stores the clicked meeting's minutes text
-    const [showMinutes, setShowMinutes] = useState(false);
-    const [editedMinutes, setEditedMinutes] = useState(""); // Stores the edited text
-    const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null); // Stores the index of the meeting being edited
-
-    const handleViewMinutes = (minutesText, index) => {
-        setSelectedMinutes(minutesText);
-        setEditedMinutes(minutesText); // Allow editing
-        setSelectedMeetingIndex(index); // Store index for saving
-        setShowMinutes(true);
-    };
-
-    const handleSaveMinutes = () => {
-        if (selectedMeetingIndex === null) return;
-
-        const updatedMeetings = [...recentMeetings];
-        updatedMeetings[selectedMeetingIndex].minutesText = editedMinutes;
-        setRecentMeetings(updatedMeetings);
-
-        setShowMinutes(false);
-        setSelectedMeetingIndex(null);
-    };
-
-
-
-    const closeMinutes = () => {
-        setShowMinutes(false);
-        setSelectedMinutes("");
-    };
-    const handleGeneratePDF = () => {
-        if (!selectedMinutes) return;
-        const doc = new jsPDF();
-        const maxWidth = 190;
-        const textLines = doc.splitTextToSize(selectedMinutes, maxWidth);
-        doc.text(textLines, 10, 10);
-        doc.save("minutes.pdf");
-    };
     useEffect(() => {
         const fetchCommitteeData = async () => {
             if (!id) {
@@ -116,31 +84,66 @@ function CommitteeDashboard() {
         fetchCommitteeData();
     }, [id]);
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
-    if (!committee) return <div>No committee found</div>;
+    const handleViewMinutes = (minutesText, index) => {
+        setSelectedMinutes(minutesText);
+        setEditedMinutes(minutesText);
+        setSelectedMeetingIndex(index);
+        setShowMinutes(true);
+    };
 
+    const handleSaveMinutes = async () => {
+        if (selectedMeetingIndex === null || !canEditMinutes) return;
 
-    const toggleSection = (setter) => {
-        setter(prev => !prev);
+        try {
+            const updatedMeetings = [...recentMeetings];
+            updatedMeetings[selectedMeetingIndex].minutesText = editedMinutes;
+            setRecentMeetings(updatedMeetings);
+            setShowMinutes(false);
+            setSelectedMeetingIndex(null);
+        } catch (err) {
+            setError('Failed to save minutes');
+        }
+    };
+
+    const handleGeneratePDF = () => {
+        if (!selectedMinutes) return;
+        const doc = new jsPDF();
+        const maxWidth = 190;
+        const textLines = doc.splitTextToSize(selectedMinutes, maxWidth);
+        doc.text(textLines, 10, 10);
+        doc.save("minutes.pdf");
     };
 
     const handleLeaveCommittee = async () => {
         try {
             const token = localStorage.getItem('token');
+            const confirmed = window.confirm('Are you sure you want to leave this committee?');
+            
+            if (!confirmed) return;
+    
             await axios.post(
                 `${import.meta.env.VITE_BASE_URL}/api/committees/${id}/leave`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
+                { userId: user._id }, // Add user ID to request body
+                { 
+                    headers: {  
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    } 
+                }
             );
+            
+            alert('You have successfully left the committee');
             navigate('/committee');
         } catch (err) {
-            setError(err.message);
+            console.error('Error leaving committee:', err);
+            setError(err.response?.data?.message || 'Error leaving committee');
+            alert('Failed to leave committee');
         }
     };
 
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">Error: {error}</div>;
+    if (!committee) return <div>No committee found</div>;
 
     return (
         <div className="committeeDash">
@@ -173,26 +176,24 @@ function CommitteeDashboard() {
             </div>
 
             <div className="utility">
-    {/* Show Schedule Meeting button only if user is a convener */}
-    {user?.status === "convener" && (
-        <a href="/scheduleMeeting" className="schedule-btn">
-            Schedule Meeting
-        </a>
-    )}
+                {canScheduleMeetings && (
+                    <a href="/scheduleMeeting" className="schedule-btn">
+                        Schedule Meeting
+                    </a>
+                )}
 
-    <a href="/scheduleCalendar" className="upcoming-btn">
-        Upcoming Meetings
-    </a>
-    
-    <button onClick={() => toggleSection(setShowRecentMeetings)}>
-        {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
-    </button>
-    
-    <button onClick={handleLeaveCommittee} className="leave-btn">
-        Leave Committee
-    </button>
-</div>
-
+                <a href="/scheduleCalendar" className="upcoming-btn">
+                    Upcoming Meetings
+                </a>
+                
+                <button onClick={() => setShowRecentMeetings(prev => !prev)}>
+                    {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
+                </button>
+                
+                <button onClick={handleLeaveCommittee} className="leave-btn">
+                    Leave Committee
+                </button>
+            </div>
 
             <div className="members">
                 <h2>Committee Members</h2>
@@ -223,10 +224,10 @@ function CommitteeDashboard() {
                     <button className="close-btn" onClick={() => setShowRecentMeetings(false)}>
                         ✕
                     </button>
-                    <h2 style={{ textAlign: "center" }}>Recent Meetings</h2>
+                    <h2>Recent Meetings</h2>
                     <table>
                         <thead>
-                            <tr >
+                            <tr>
                                 <th>Sl No.</th>
                                 <th>Topic</th>
                                 <th>Date</th>
@@ -235,62 +236,53 @@ function CommitteeDashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            {recentMeetings.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" style={{ textAlign: "center" }}>
-                                        No recent meetings
+                            {recentMeetings.map((meeting, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td>{meeting.topic}</td>
+                                    <td>{meeting.date}</td>
+                                    <td>{meeting.time}</td>
+                                    <td>
+                                        <button 
+                                            onClick={() => handleViewMinutes(meeting.minutesText, index)}
+                                            className="minutes-button"
+                                        >
+                                            View Minutes
+                                        </button>
                                     </td>
                                 </tr>
-                            ) : (
-                                recentMeetings.map((meeting, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>{meeting.topic}</td>
-                                        <td>{meeting.date}</td>
-                                        <td>{meeting.time}</td>
-                                        <td>
-
-                                            <button onClick={() => handleViewMinutes(meeting.minutesText, index)} className="minutes-button">
-                                                View Minutes
-                                            </button>
-
-                                        </td>
-
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </section>
             )}
 
-{showMinutes && (
-    <section id="minu">
-        <form id="minutes">
-            <button type="button" className="close-btn" onClick={closeMinutes}>✕</button>
-            <label htmlFor="detail">Meeting Minutes:</label>
-            <textarea
-                id="detail"
-                value={editedMinutes}
-                onChange={(e) => setEditedMinutes(e.target.value)}
-                readOnly={user?.status !== "chairman"} // Prevent editing for non-chairman users
-            ></textarea>
-            <br /><br />
-            
-            {/* Only show save button if the user is the chairman */}
-            {user?.status === "chairman" && (
-                <button type="button" id="save" onClick={handleSaveMinutes}>Save</button>
+            {showMinutes && (
+                <section id="minu">
+                    <form id="minutes">
+                        <button type="button" className="close-btn" onClick={() => setShowMinutes(false)}>
+                            ✕
+                        </button>
+                        <label htmlFor="detail">Meeting Minutes:</label>
+                        <textarea
+                            id="detail"
+                            value={editedMinutes}
+                            onChange={(e) => setEditedMinutes(e.target.value)}
+                            readOnly={!canEditMinutes}
+                        />
+                        
+                        {canEditMinutes && (
+                            <button type="button" id="save" onClick={handleSaveMinutes}>
+                                Save
+                            </button>
+                        )}
+
+                        <button type="button" id="generate-pdf" onClick={handleGeneratePDF}>
+                            Generate PDF
+                        </button>
+                    </form>
+                </section>
             )}
-
-            <button type="button" id="generate-pdf" onClick={handleGeneratePDF}>
-                Generate PDF
-            </button>
-        </form>
-    </section>
-)}
-
-
-
         </div>
     );
 }

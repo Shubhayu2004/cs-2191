@@ -43,7 +43,7 @@ const CommitteeApp = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users`, {
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -64,27 +64,59 @@ const CommitteeApp = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/committees/create`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` }
+        // Validate form data
+        if (!formData.committeeName || !formData.committeePurpose || 
+            !formData.chairman.email || !formData.convener.email) {
+            throw new Error('Please fill all required fields');
         }
-      );
-      setCommittees(prev => [...prev, response.data]);
-      setIsCommitteeVisible(false);
-      setFormData({
-        committeeName: "",
-        committeePurpose: "",
-        chairman: { name: "", email: "", contactNumber: "" },
-        convenor: { name: "", email: "", contactNumber: "" },
-        members: []
-      });
+
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/api/committees/create`,
+            {
+                committeeName: formData.committeeName,
+                committeePurpose: formData.committeePurpose,
+                chairman: {
+                    name: formData.chairman.name,
+                    email: formData.chairman.email,
+                    contactNumber: formData.chairman.contactNumber || ''
+                },
+                convener: {
+                    name: formData.convener.name,
+                    email: formData.convener.email,
+                    contactNumber: formData.convener.contactNumber || ''
+                },
+                members: formData.members.map(member => ({
+                    name: member.name,
+                    email: member.email,
+                    contactNumber: member.contactNumber || ''
+                }))
+            },
+            {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        setCommittees(prev => [...prev, response.data]);
+        setIsCommitteeVisible(false);
+        setFormData({
+            committeeName: "",
+            committeePurpose: "",
+            chairman: { name: "", email: "", contactNumber: "" },
+            convener: { name: "", email: "", contactNumber: "" },
+            members: []
+        });
+
+        // Show success message
+        alert('Committee created successfully!');
     } catch (error) {
-      console.error("Error creating committee:", error);
+        console.error("Error creating committee:", error);
+        alert(error.response?.data?.message || 'Error creating committee');
     }
-  };
+};
 
   return (
     <div className="committee-app">

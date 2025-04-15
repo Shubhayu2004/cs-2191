@@ -5,18 +5,42 @@ exports.createCommittee = async (req, res) => {
     try {
         const { committeeName, committeePurpose, chairman, convener, members } = req.body;
         
+        // Validate required fields
+        if (!committeeName || !committeePurpose || !chairman || !convener) {
+            return res.status(400).json({ 
+                message: 'Missing required fields',
+                required: ['committeeName', 'committeePurpose', 'chairman', 'convener']
+            });
+        }
+
         const committee = new Committee({
             committeeName, 
             committeePurpose, 
-            chairman, 
-            convener, 
-            members
+            chairman: {
+                name: chairman.name,
+                email: chairman.email,
+                contactNumber: chairman.contactNumber || ''
+            }, 
+            convener: {
+                name: convener.name,
+                email: convener.email,
+                contactNumber: convener.contactNumber || ''
+            }, 
+            members: members.map(member => ({
+                name: member.name,
+                email: member.email,
+                contactNumber: member.contactNumber || ''
+            }))
         });
 
         await committee.save();
         res.status(201).json(committee);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Committee creation error:', error);
+        res.status(400).json({ 
+            message: 'Error creating committee',
+            error: error.message 
+        });
     }
 };
 
