@@ -11,11 +11,11 @@ const CommitteeList = ({ committees }) => {
         <div className="committees-grid">
           {committees.map((committee) => (
             <div key={committee._id} className="committee-card">
-              <h3>{committee.committeeName}</h3>
+              <h3>{committee.committeeName }</h3>
               <p><strong>Purpose:</strong> {committee.committeePurpose}</p>
               <div className="committee-members">
-                <p><strong>Chairman:</strong> {committee.chairman.name}</p>
-                <p><strong>Convenor:</strong> {committee.convenor.name}</p>
+                <p><strong>Chairman:</strong> {committee.chairman?.name || "N/A"}</p>
+                <p><strong>Convenor:</strong> {committee.convenor?.name || "N/A"}</p>
                 <div className="members-section">
                   <strong>Members:</strong>
                   <ul>
