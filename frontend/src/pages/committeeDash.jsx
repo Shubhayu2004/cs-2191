@@ -118,20 +118,20 @@ function CommitteeDashboard() {
         try {
             const token = localStorage.getItem('token');
             const confirmed = window.confirm('Are you sure you want to leave this committee?');
-            
+
             if (!confirmed) return;
-    
+
             await axios.post(
                 `${import.meta.env.VITE_BASE_URL}/api/committees/${id}/leave`,
                 { userId: user._id }, // Add user ID to request body
-                { 
-                    headers: {  
+                {
+                    headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
-                    } 
+                    }
                 }
             );
-            
+
             alert('You have successfully left the committee');
             navigate('/committee');
         } catch (err) {
@@ -185,11 +185,11 @@ function CommitteeDashboard() {
                 <a href="/scheduleCalendar" className="upcoming-btn">
                     Upcoming Meetings
                 </a>
-                
-                <button onClick={() => setShowRecentMeetings(prev => !prev)}>
+
+                <button className="upcoming-btn" onClick={() => setShowRecentMeetings(prev => !prev)}>
                     {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
                 </button>
-                
+
                 <button onClick={handleLeaveCommittee} className="leave-btn">
                     Leave Committee
                 </button>
@@ -243,7 +243,7 @@ function CommitteeDashboard() {
                                     <td>{meeting.date}</td>
                                     <td>{meeting.time}</td>
                                     <td>
-                                        <button 
+                                        <button
                                             onClick={() => handleViewMinutes(meeting.minutesText, index)}
                                             className="minutes-button"
                                         >
@@ -270,7 +270,7 @@ function CommitteeDashboard() {
                             onChange={(e) => setEditedMinutes(e.target.value)}
                             readOnly={!canEditMinutes}
                         />
-                        
+
                         {canEditMinutes && (
                             <button type="button" id="save" onClick={handleSaveMinutes}>
                                 Save

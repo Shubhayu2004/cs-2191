@@ -1,5 +1,3 @@
-
-
 .committee-list {
   padding: 20px;
   font-family: 'Roboto', sans-serif;
@@ -10,10 +8,10 @@
   text-align: center;
   font-size: 2rem;
   margin-bottom: 20px;
-  color: #374785; 
+  color: #374785;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  border-bottom: 3px solid #4caf50; 
+  border-bottom: 3px solid #4caf50;
   padding-bottom: 10px;
 }
 
@@ -26,7 +24,7 @@
 
 .committee-card {
   background-color: #ffffff;
-  border-left: 5px solid #4caf50; 
+  border-left: 5px solid #4caf50;
   border-radius: 12px;
   padding: 25px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -38,7 +36,7 @@
 .committee-card:hover {
   transform: translateY(-10px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  border-left-color: #374785; 
+  border-left-color: #374785;
 }
 
 .committee-card h3 {
@@ -55,13 +53,13 @@
 }
 
 .committee-card strong {
-  color: #374785; 
+  color: #374785;
 }
 
 .committee-members {
   margin-top: 15px;
   padding: 15px;
-  background-color: #f9f9fc; 
+  background-color: #f9f9fc;
   border-radius: 8px;
 }
 
@@ -73,7 +71,7 @@
   display: block;
   font-size: 1rem;
   margin-bottom: 5px;
-  color: #4caf50; 
+  color: #4caf50;
 }
 
 .members-section ul {
@@ -88,7 +86,6 @@
   margin: 5px 0;
 }
 
-/
 .committee-card:hover h3 {
   text-shadow: 0px 2px 5px rgba(55, 71, 133, 0.5);
 }
