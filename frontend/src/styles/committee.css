@@ -75,7 +75,7 @@
         transition: background 0.2s ease;
       }
     
-    .sidebar {
+    /* .sidebar {
       height: 100%;
       width: 250px;
       position: fixed;
@@ -140,7 +140,7 @@
       padding-top: 40px;
     }
     
-    
+     */
     #create-committee {
       background-color: white;
       width: 80%;
@@ -211,6 +211,10 @@
       margin-bottom: 10px;
       width: 30%;
     }
+    .addmemberbtn:hover {
+      background-color: #28a745; 
+      color: white; 
+    }
     .committeebtn{
       background-color: #007bff;
       color: white;
@@ -221,6 +225,24 @@
       width: 100%;
       margin-top: 1rem;
       margin-bottom: 10px;
+    }
+    .committeebtn:hover{
+      background-color: #007bff;
+      color: white;
+    }
+    .remove-member{
+      background-color: #007bff;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      width: 30%;
+    }
+    .remove-member:hover{
+      background-color: #007bff;
     }
     .main-content input[type="text"],
     .main-content input[type="number"],
