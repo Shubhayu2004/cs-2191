@@ -292,18 +292,18 @@
       width: 50%;
     }
     
-    #MyCom {
+    /* #MyCom {
       text-decoration: underline;
     
     }
     
     .comList {
       max-height: 60vh;
-      /* Adjust the height as needed */
+     
       overflow-y: auto;
       margin-top: 20px;
       width: 100%;
-      /* Optional: Adjust the width if needed */
+     
     }
     
     
@@ -339,7 +339,7 @@
     
     .main-content tbody tr:last-child td {
       border-bottom: none;
-    }
+    } */
     
    .main-content a {
       text-decoration: none;
