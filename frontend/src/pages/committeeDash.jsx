@@ -50,7 +50,7 @@ function CommitteeDashboard() {
 
     const isChairman = user?.status === "chairman";
     const isConvener = user?.status === "convener";
-    const canEditMinutes = isChairman;
+    const canEditMinutes = isConvener ;
     const canScheduleMeetings = isChairman || isConvener;
 
     useEffect(() => {
@@ -82,6 +82,14 @@ function CommitteeDashboard() {
         };
 
         fetchCommitteeData();
+
+        const fetchData = async () => {
+            await fetchCommitteeData();
+            await fetchMinutes();
+        };
+        
+        fetchData();
+
     }, [id]);
 
     const handleViewMinutes = (minutesText, index) => {
@@ -93,17 +101,52 @@ function CommitteeDashboard() {
 
     const handleSaveMinutes = async () => {
         if (selectedMeetingIndex === null || !canEditMinutes) return;
-
+    
         try {
-            const updatedMeetings = [...recentMeetings];
-            updatedMeetings[selectedMeetingIndex].minutesText = editedMinutes;
-            setRecentMeetings(updatedMeetings);
+            const token = localStorage.getItem('token');
+            const meeting = recentMeetings[selectedMeetingIndex];
+            
+            await axios.put(
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}`,
+                {
+                    minutesText: editedMinutes
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+    
+            // Refresh minutes after saving
+            await fetchMinutes();
             setShowMinutes(false);
             setSelectedMeetingIndex(null);
         } catch (err) {
             setError('Failed to save minutes');
         }
     };
+    
+    const fetchMinutes = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            setRecentMeetings(response.data);
+        } catch (err) {
+            console.error('Error fetching minutes:', err);
+            setError(err.response?.data?.message || 'Error loading minutes');
+        }
+    };
+    
 
     const handleGeneratePDF = () => {
         if (!selectedMinutes) return;
