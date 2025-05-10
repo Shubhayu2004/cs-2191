@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf";
 import "../styles/committeeDash.css";
 import { UserDataContext } from '../context/UserContext';
 import React from "react";
+import { Link } from 'react-router-dom';
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
@@ -32,6 +33,7 @@ function CommitteeDashboard() {
     const isMember = user?.status === "member";
     const canEditMinutes = isConvener;
     const canScheduleMeetings = isConvener;
+    const canManageUsers = user?.status === "admin" || user?.status === "chairman";
     const [newMinutesText, setNewMinutesText] = useState("");
     const [showCreateMoM, setShowCreateMoM] = useState(false);
 
@@ -156,29 +158,29 @@ function CommitteeDashboard() {
         }
     };
     const handleSaveNewMoM = async () => {
-  if (!newMinutesText.trim()) return; // Do not save if empty
+        if (!newMinutesText.trim()) return; // Do not save if empty
 
-  try {
-    const token = localStorage.getItem("token");
-    await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
-      { minutesText: newMinutesText },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    alert("MoM saved successfully!");
-    setNewMinutesText(""); // Reset the form
-    setShowCreateMoM(false); // Close the form
-    fetchMinutes(); // Optionally refresh the list of meetings/minutes
-  } catch (err) {
-    console.error("Error saving MoM:", err);
-    alert("Failed to save MoM.");
-  }
-};
+        try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
+                { minutesText: newMinutesText },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            alert("MoM saved successfully!");
+            setNewMinutesText(""); // Reset the form
+            setShowCreateMoM(false); // Close the form
+            fetchMinutes(); // Optionally refresh the list of meetings/minutes
+        } catch (err) {
+            console.error("Error saving MoM:", err);
+            alert("Failed to save MoM.");
+        }
+    };
 
     const handleGeneratePDF = () => {
         if (!selectedMinutes) return;
@@ -277,6 +279,18 @@ function CommitteeDashboard() {
             </div>
 
             <div className="utility">
+
+                {canManageUsers && (
+                    <Link
+                        to="/manage-users"
+                        state={{ committeeName: committee.committeeName }}
+                        className="manage-btn"
+                    >
+                        Manage Users
+                    </Link>
+
+                )}
+
                 {canScheduleMeetings && (
                     <a href="/scheduleMeeting" className="schedule-btn">
                         Schedule Meeting
@@ -289,10 +303,10 @@ function CommitteeDashboard() {
                     {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
                 </button>
                 {isConvener && (
-  <button className="create-mom-btn" onClick={() => setShowCreateMoM(true)}>
-    Create New MoM
-  </button>
-)}
+                    <button className="create-mom-btn" onClick={() => setShowCreateMoM(true)}>
+                        Create New MoM
+                    </button>
+                )}
 
                 <button onClick={handleLeaveCommittee} className="leave-btn">
                     Leave Committee
@@ -417,20 +431,20 @@ function CommitteeDashboard() {
                 </section>
             )}
             {showCreateMoM && isConvener && (
-  <section className="create-mom-section">
-    <button className="close-btn" onClick={() => setShowCreateMoM(false)}>✕</button>
-    <h2>Create New Minutes of Meeting</h2>
-    <textarea
-      value={newMinutesText}
-      onChange={(e) => setNewMinutesText(e.target.value)}
-      placeholder="Enter meeting minutes here..."
-      rows="10"
-    />
-    <button onClick={handleSaveNewMoM} className="save-mom-btn">
-      Save MoM
-    </button>
-  </section>
-)}
+                <section className="create-mom-section">
+                    <button className="close-btn" onClick={() => setShowCreateMoM(false)}>✕</button>
+                    <h2>Create New Minutes of Meeting</h2>
+                    <textarea
+                        value={newMinutesText}
+                        onChange={(e) => setNewMinutesText(e.target.value)}
+                        placeholder="Enter meeting minutes here..."
+                        rows="10"
+                    />
+                    <button onClick={handleSaveNewMoM} className="save-mom-btn">
+                        Save MoM
+                    </button>
+                </section>
+            )}
 
         </div>
     );

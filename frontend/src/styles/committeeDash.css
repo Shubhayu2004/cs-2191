@@ -94,7 +94,8 @@
 
 button,
 .schedule-btn,
-.minutes-button {
+.minutes-button,
+.manage-btn {
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -297,6 +298,14 @@ li {
 .schedule-btn:hover {
   background-color: #0056b3;
 
+}
+
+.manage-btn {
+  background-color: #2a0d77;
+}
+
+.manage-btn:hover {
+  background-color: #330bb6;
 }
 
 table {
