@@ -434,6 +434,31 @@ function CommitteeDashboard() {
                 <section className="create-mom-section">
                     <button className="close-btn" onClick={() => setShowCreateMoM(false)}>✕</button>
                     <h2>Create New Minutes of Meeting</h2>
+                    <label>
+                        Topic:</label>
+                    <input
+                        type="text"
+                        placeholder="Enter meeting topic"
+                        className="mom-input"
+                    />
+
+
+                    <label>
+                        Date :</label>
+                    <input
+                        type="date"
+                        className="mom-input"
+                    />
+
+
+                    <label>
+                        Time :</label>
+                    <input
+                        type="time"
+                        className="mom-input"
+                    />
+
+
                     <textarea
                         value={newMinutesText}
                         onChange={(e) => setNewMinutesText(e.target.value)}
