@@ -9,15 +9,18 @@
     width: 95%;
     max-width: 900px;
 }
-.scheduleSidebar{
+
+.scheduleSidebar {
     font-family: 'Roboto', sans-serif;
     margin: 0 auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    width: 95%; /* Full width */
+    width: 95%;
+    /* Full width */
     position: relative;
 }
+
 /* Header and Go Back Button */
 .headerContainer {
     width: 100%;
@@ -25,14 +28,17 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    margin-bottom: 20px; /* Adds space between header and calendar */
+    margin-bottom: 20px;
+    /* Adds space between header and calendar */
 }
 
 .scheduleMeetingContainer h2 {
     font-size: 2rem;
     font-weight: bold;
-    flex-grow: 1; /* Allows the title to take the center space */
-    text-align: center; /* Ensures the title stays centered */
+    flex-grow: 1;
+    /* Allows the title to take the center space */
+    text-align: center;
+    /* Ensures the title stays centered */
 }
 
 .buttongobackcalendar {
@@ -161,7 +167,12 @@
     cursor: pointer;
 }
 
+.scheduleMeetingContainer a {
+    text-decoration: none;
+}
+
 @media (max-width: 600px) {
+
     .scheduleMeetingContainer .scheduleMeetingForm input[type="text"],
     .scheduleMeetingContainer .scheduleMeetingForm input[type="date"],
     .scheduleMeetingContainer .scheduleMeetingForm input[type="time"],
@@ -171,7 +182,8 @@
     }
 
     .buttongobackcalendar {
-        width: 100%; /* Full width on smaller screens */
+        width: 100%;
+        /* Full width on smaller screens */
     }
 
     .scheduleMeetingContainer {
