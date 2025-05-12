@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../axios.config';
 import { useAuth } from '../context/UserContext';
-
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import Sidebar from '../components/Sidebar';
 const ManageUsers = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { token } = useAuth();
+    const navigate = useNavigate(); // Initialize navigate function
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -27,7 +30,7 @@ const ManageUsers = () => {
                 setLoading(false);
             }
         };
-    
+
         if (token) {
             fetchUsers();
         }
@@ -51,6 +54,9 @@ const ManageUsers = () => {
         }
     };
 
+    const handleGoBack = () => {
+        navigate(-1); // Navigates to the previous page
+    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -58,7 +64,45 @@ const ManageUsers = () => {
 
     return (
         <div className="manage-users-container">
-            <h1>Manage Users</h1>
+            <Sidebar 
+                isOpen={isSidebarOpen} 
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+            />
+            
+            {/* Go Back Button */}
+            <button 
+                onClick={handleGoBack} 
+                className="button-for-manage-users"
+                style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    padding: '10px 20px',
+                    backgroundColor: '#007BFF',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    transition: 'background-color 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#007BFF'}
+            >
+                Go Back
+            </button>
+
+
+             {/* Manage Users Heading */}
+             <h1 style={{
+                textAlign: 'center',  // Center the text horizontally
+                marginTop: '30px',    // Add some space above
+                fontSize: '30px',     // Adjust font size if needed
+                fontWeight: 'bold'    // Make the font bold
+            }}>
+                Manage Users
+            </h1>
+            
             <table>
                 <thead>
                     <tr>

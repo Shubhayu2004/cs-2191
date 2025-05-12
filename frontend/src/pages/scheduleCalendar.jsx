@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import styles from "../styles/scheduleMeeting.module.css";
+import Sidebar from '../components/Sidebar';
 
 const localizer = momentLocalizer(moment);
 
 const ScheduledMeetingsCalendar = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null); // State for selected event
+    const navigate = useNavigate(); // Initialize navigate function
 
     useEffect(() => {
         const storedMeetings = JSON.parse(localStorage.getItem("meetings")) || [];
@@ -33,9 +37,30 @@ const ScheduledMeetingsCalendar = () => {
         setSelectedEvent(null); // Close the popup by clearing selected event
     };
 
+    const handleGoBack = () => {
+        navigate(-1); // Go to the previous page
+    };
+
     return (
-        <div className={styles} style={{ height: "80vh", margin: "20px", position: "relative" }}>
-            <h2>Meeting Schedule</h2>
+        <div className={styles.scheduleMeetingContainer} style={{ height: "80vh", margin: "20px", position: "relative" }}>
+            <Sidebar 
+    isOpen={isSidebarOpen} 
+    onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+    className={styles.scheduleSidebar} // Pass the new style
+/>
+
+
+            {/* Header and Go Back Button Section */}
+            <div className={styles.headerContainer}>
+                <h2>Meeting Schedule</h2>
+                <button 
+                    onClick={handleGoBack} 
+                    className="buttongobackcalendar"
+                >
+                    Go Back
+                </button>
+            </div>
+
             <Calendar
                 localizer={localizer}
                 events={events}
@@ -50,16 +75,7 @@ const ScheduledMeetingsCalendar = () => {
                 <div className={styles.popup}>
                     <button
                         onClick={handleClosePopup}
-                        style={{
-                            color: "black",
-                            position: "absolute",
-                            top: "10px",
-                            right: "10px",
-                            border: "none",
-                            background: "transparent",
-                            fontSize: "30px",
-                            cursor: "pointer",
-                        }}
+                        className={styles.closeButton}
                     >
                         &times;
                     </button>

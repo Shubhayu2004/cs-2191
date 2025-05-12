@@ -1,8 +1,9 @@
 import styles from "../styles/scheduleMeeting.module.css";
 import React, { useState, useEffect } from "react";
-
+import Sidebar from '../components/Sidebar';
 
 const ScheduleMeeting = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [scheduleMeetingVisibility, setScheduleMeetingVisibility] = useState(false);
     const [showCommitteeList, setShowCommitteeList] = useState(false);
     const [formData, setFormData] = useState({
@@ -69,10 +70,17 @@ const ScheduleMeeting = () => {
 
     return (
         <div className={styles.scheduleMeetingContainer}>
+            <Sidebar 
+                isOpen={isSidebarOpen} 
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+                className={styles.scheduleSidebar}
+            />
             <button className={styles.btnForMeeting} onClick={toggleScheduleMeetingVisibility}>
                 Schedule A Meeting
             </button>
-            <a href="/scheduleCalendar" className={styles.btnForMeeting}>View Schedule</a>
+            <a href="/scheduleCalendar" className={styles.btnForMeeting}>
+                View Schedule
+            </a>
             {scheduleMeetingVisibility && (
                 <section className={styles.scheduleMeetingForm}>
                     <button className={styles.btnForMeeting} onClick={toggleCommitteeList}>
@@ -97,7 +105,6 @@ const ScheduleMeeting = () => {
                             ))}
                         </div>
                     )}
-
                     <form onSubmit={handleFormSubmit}>
                         <label htmlFor="title">Title:</label>
                         <input
@@ -108,7 +115,6 @@ const ScheduleMeeting = () => {
                             onChange={handleInputChange}
                             required
                         />
-
                         <label htmlFor="date">Date:</label>
                         <input
                             type="date"
@@ -118,7 +124,6 @@ const ScheduleMeeting = () => {
                             onChange={handleInputChange}
                             required
                         />
-
                         <label htmlFor="startTime">Start Time:</label>
                         <input
                             type="time"
@@ -128,7 +133,6 @@ const ScheduleMeeting = () => {
                             onChange={handleInputChange}
                             required
                         />
-
                         <label htmlFor="location">Location/Link:</label>
                         <input
                             type="text"
@@ -137,7 +141,6 @@ const ScheduleMeeting = () => {
                             value={formData.location}
                             onChange={handleInputChange}
                         />
-
                         <label htmlFor="description">Description:</label>
                         <textarea
                             id="description"
@@ -145,15 +148,12 @@ const ScheduleMeeting = () => {
                             value={formData.description}
                             onChange={handleInputChange}
                         ></textarea>
-
                         <button className={styles.btnForMeeting} type="submit">
                             Schedule Meeting
                         </button>
                     </form>
                 </section>
             )}
-
-
         </div>
     );
 };

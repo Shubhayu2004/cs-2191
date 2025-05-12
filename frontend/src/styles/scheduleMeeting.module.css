@@ -1,3 +1,4 @@
+/* Schedule Meeting Container */
 .scheduleMeetingContainer {
     font-family: 'Roboto', sans-serif;
     margin: 0 auto;
@@ -5,10 +6,56 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 50%;
+    width: 95%;
     max-width: 900px;
 }
+.scheduleSidebar{
+    font-family: 'Roboto', sans-serif;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    width: 95%; /* Full width */
+    position: relative;
+}
+/* Header and Go Back Button */
+.headerContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 20px; /* Adds space between header and calendar */
+}
 
+.scheduleMeetingContainer h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    flex-grow: 1; /* Allows the title to take the center space */
+    text-align: center; /* Ensures the title stays centered */
+}
+
+.buttongobackcalendar {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    padding: 8px 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.buttongobackcalendar:hover {
+    background-color: #0056b3;
+}
+
+
+
+/* Schedule Form Inputs and Button */
 .scheduleMeetingContainer input[type="text"],
 .scheduleMeetingContainer input[type="date"],
 .scheduleMeetingContainer input[type="time"],
@@ -86,7 +133,7 @@
     margin-top: 10px;
 }
 
-/* ScheduledMeetingsCalendar.module.css */
+/* Popup Modal */
 .popup {
     position: absolute;
     top: 20%;
@@ -115,12 +162,20 @@
 }
 
 @media (max-width: 600px) {
-
     .scheduleMeetingContainer .scheduleMeetingForm input[type="text"],
     .scheduleMeetingContainer .scheduleMeetingForm input[type="date"],
     .scheduleMeetingContainer .scheduleMeetingForm input[type="time"],
     .scheduleMeetingContainer .scheduleMeetingForm textarea,
     .scheduleMeetingContainer .btnForMeeting {
         font-size: 16px;
+    }
+
+    .buttongobackcalendar {
+        width: 100%; /* Full width on smaller screens */
+    }
+
+    .scheduleMeetingContainer {
+        width: 100%;
+        padding: 10px;
     }
 }
