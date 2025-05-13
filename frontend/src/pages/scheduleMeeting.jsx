@@ -5,7 +5,7 @@ import Sidebar from '../components/Sidebar';
 const ScheduleMeeting = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [scheduleMeetingVisibility, setScheduleMeetingVisibility] = useState(false);
-    const [showCommitteeList, setShowCommitteeList] = useState(false);
+    // const [showCommitteeList, setShowCommitteeList] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         date: '',
@@ -13,8 +13,8 @@ const ScheduleMeeting = () => {
         location: '',
         description: '',
     });
-    const committee = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    const [selectedCommittees, setSelectedCommittees] = useState([]);
+    // const committee = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+    // const [selectedCommittees, setSelectedCommittees] = useState([]);
     const [meetings, setMeetings] = useState([]);
 
     useEffect(() => {
@@ -26,17 +26,17 @@ const ScheduleMeeting = () => {
         setScheduleMeetingVisibility(!scheduleMeetingVisibility);
     };
 
-    const toggleCommitteeList = () => {
-        setShowCommitteeList(!showCommitteeList);
-    };
+    // const toggleCommitteeList = () => {
+    //     setShowCommitteeList(!showCommitteeList);
+    // };
 
-    const handleCommitteeSelection = (member) => {
-        setSelectedCommittees((prev) =>
-            prev.includes(member)
-                ? prev.filter((item) => item !== member)
-                : [...prev, member]
-        );
-    };
+    // const handleCommitteeSelection = (member) => {
+    //     setSelectedCommittees((prev) =>
+    //         prev.includes(member)
+    //             ? prev.filter((item) => item !== member)
+    //             : [...prev, member]
+    //     );
+    // };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -48,7 +48,7 @@ const ScheduleMeeting = () => {
         const { title, date, startTime } = formData;
 
         if (title && date && startTime) {
-            const newMeeting = { ...formData, selectedCommittees };
+            const newMeeting = { ...formData };
             const updatedMeetings = [...meetings, newMeeting];
             setMeetings(updatedMeetings);
             localStorage.setItem('meetings', JSON.stringify(updatedMeetings));
@@ -61,7 +61,7 @@ const ScheduleMeeting = () => {
                 location: '',
                 description: '',
             });
-            setSelectedCommittees([]);
+            // setSelectedCommittees([]);
             setScheduleMeetingVisibility(false);
         } else {
             alert('Please fill in all required fields');
@@ -70,9 +70,9 @@ const ScheduleMeeting = () => {
 
     return (
         <div className={styles.scheduleMeetingContainer}>
-            <Sidebar 
-                isOpen={isSidebarOpen} 
-                onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+            <Sidebar
+                isOpen={isSidebarOpen}
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
                 className={styles.scheduleSidebar}
             />
             <button className={styles.btnForMeeting} onClick={toggleScheduleMeetingVisibility}>
@@ -83,7 +83,7 @@ const ScheduleMeeting = () => {
             </a>
             {scheduleMeetingVisibility && (
                 <section className={styles.scheduleMeetingForm}>
-                    <button className={styles.btnForMeeting} onClick={toggleCommitteeList}>
+                    {/* <button className={styles.btnForMeeting} onClick={toggleCommitteeList}>
                         Select Committee
                     </button>
                     {showCommitteeList && (
@@ -104,7 +104,7 @@ const ScheduleMeeting = () => {
                                 </div>
                             ))}
                         </div>
-                    )}
+                    )} */}
                     <form onSubmit={handleFormSubmit}>
                         <label htmlFor="title">Title:</label>
                         <input
