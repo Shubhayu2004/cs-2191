@@ -50,4 +50,6 @@ const minutesOfMeetingSchema = new mongoose.Schema({
 
 const MinutesOfMeeting = mongoose.model('MinutesOfMeeting', minutesOfMeetingSchema);
 
+
+
 module.exports = MinutesOfMeeting;

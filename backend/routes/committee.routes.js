@@ -19,4 +19,6 @@ router.get('/:id',
     ], 
     committeeController.getCommitteeById
 );
+
+router.post('/:id/leave', committeeController.leaveCommittee);
 module.exports = router;

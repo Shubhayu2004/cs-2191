@@ -110,3 +110,19 @@ exports.deleteCommittee = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.leaveCommittee = async (req, res) => {
+    try {
+        const committeeId = req.params.id;
+        const userEmail = req.user.email;
+        const committee = await Committee.findByIdAndUpdate(
+            committeeId,
+            { $pull: { members: { email: userEmail } } },
+            { new: true }
+        );
+        if (!committee) return res.status(404).json({ message: 'Committee not found' });
+        res.status(200).json({ message: 'Left committee', committee });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

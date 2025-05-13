@@ -121,6 +121,17 @@ const CommitteeForm = ({
                 ))
               }
             </select>
+                <input
+                  type="text"
+                  placeholder="Role (e.g. Member, Secretary, etc.)"
+                  value={member.role || ''}
+                  onChange={e => {
+                    const updatedMembers = [...formData.members];
+                    updatedMembers[index].role = e.target.value;
+                    onChange('members', updatedMembers);
+                  }}
+                  required
+                />
             <button 
               type="button" 
               className="remove-member"

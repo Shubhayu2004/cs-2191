@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema({
         enum: ['member', 'admin', 'convenor' , 'chairman'],
         
     },
+    notifications: [{
+        message: String,
+        date: { type: Date, default: Date.now },
+        read: { type: Boolean, default: false }
+}]
 })
 
 userSchema.methods.generateAuthToken = function () {
