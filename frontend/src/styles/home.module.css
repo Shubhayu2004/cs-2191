@@ -1,4 +1,3 @@
-/* Header Section */
 .pageHeader {
   background: linear-gradient(135deg, #005b61, #006d7c);
   color: white;
@@ -77,7 +76,7 @@
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   margin-left: 20px;
-  overflow-y: auto; /* Allow scrolling if content overflows */
+  overflow-y: auto; 
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -121,7 +120,7 @@
   color: #333;
   display: flex;
   align-items: center;
-  gap: 10px; /* Adds spacing between icon and text */
+  gap: 10px; 
 }
 
 .person p i {
@@ -222,6 +221,32 @@
   right: 10px;
 }
 
+
+/* Your Committees Section */
+.yourCommittee {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 30px;
+  margin-left: 20px; 
+  max-width: 750px; 
+}
+
+
+.yourCommittee ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.yourCommittee li {
+  font-size: 1.1rem;
+  color: #333;
+  margin: 8px 0;
+  border-bottom: none;
+}
+
 /* Responsiveness */
 @media (max-width: 768px) {
   .container {
@@ -239,11 +264,11 @@
   .homeContent {
     margin-left: 0;
     padding: 20px;
-    width: 100%; /* Ensure it takes full width */
+    width: 100%; 
   }
 
   .menuItem {
-    padding: 12px 15px; /* Adjust padding for smaller screens */
+    padding: 12px 15px;
   }
 
   .top {
