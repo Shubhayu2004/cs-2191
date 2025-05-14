@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@fontsource/outfit": "^5.2.5",
+    "@fontsource/roboto": "^5.2.5",
+    "axios": "^1.9.0",
+    "jspdf": "^3.0.1",
+    "react-big-calendar": "^1.18.0"
+  }
+}

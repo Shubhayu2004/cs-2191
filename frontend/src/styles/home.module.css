@@ -1,0 +1,265 @@
+/* Header Section */
+.pageHeader {
+  background: linear-gradient(135deg, #005b61, #006d7c);
+  color: white;
+  text-align: center;
+  padding: 40px;
+  font-size: 2rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+  border-bottom: 5px solid #004d61;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-weight: bold;
+  font-size: 3rem;
+}
+
+/* Container */
+.container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+  flex-wrap: wrap; /* Allow wrapping of flex items on small screens */
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: #004d61;
+  color: #fff;
+  width: 20%;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h1 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.menu {
+  width: 100%;
+}
+
+.menuItem {
+  display: block;
+  width: 80%;
+  padding: 14px 20px;
+  margin: 12px 0;
+  text-decoration: none;
+  color: white;
+  background: #006d7c;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.menuItem:hover {
+  background: #003f4a;
+  transform: translateX(5px);
+}
+
+/* Main Content */
+.homeContent {
+  flex: 1;
+  padding: 40px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.homeHead {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #005b61;
+  text-align: center;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Profile Section */
+.pfp img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid #006d7c;
+}
+
+.person {
+  flex: 1;
+  margin-left: 20px;
+  background: linear-gradient(135deg, #f5f5f5, #eaeaea);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.person p {
+  margin: 10px 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Adds spacing between icon and text */
+}
+
+.person p i {
+  font-size: 1.2rem;
+  color: #005b61;
+}
+
+.person .userName {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #005b61;
+}
+
+.person .userEmail {
+  font-size: 1.2rem;
+  color: #444;
+}
+
+.person .userStatus {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #888;
+}
+
+/* Add hover effect to profile details for interactivity */
+.person:hover {
+  transform: scale(1.02);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Notifications Section */
+.noti {
+  position: relative;
+}
+
+.noti button {
+  background: none;
+  border: none;
+  position: relative;
+  cursor: pointer;
+}
+
+.noti img {
+  width: 35px;
+  height: 35px;
+}
+
+.notiCount {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: red;
+  color: white;
+  font-size: 0.9rem;
+  border-radius: 50%;
+  padding: 4px 8px;
+}
+
+.notifications {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 10;
+  width: 300px;
+}
+
+.notifications h2 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  color: #005b61;
+}
+
+.notifications ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notifications li {
+  font-size: 1rem;
+  color: #333;
+  margin: 8px 0;
+}
+
+.closebtn {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 20px;
+    box-shadow: none;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .homeContent {
+    margin-left: 0;
+    padding: 20px;
+    width: 100%; /* Ensure it takes full width */
+  }
+
+  .menuItem {
+    padding: 12px 15px; /* Adjust padding for smaller screens */
+  }
+
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .person {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+
+  .notifications {
+    width: 100%; /* Full width for notifications */
+    top: 0;
+    right: 0;
+    border-radius: 0; /* No rounded corners */
+  }
+}
