@@ -131,32 +131,50 @@ function CommitteeDashboard() {
     };
 
     const handleSaveMinutes = async () => {
-        if (selectedMeetingIndex === null || !canEditMinutes) return;
+    if (selectedMeetingIndex === null) return;
 
-        try {
-            const token = localStorage.getItem('token');
-            const meeting = recentMeetings[selectedMeetingIndex];
+    const updatedMeetings = [...recentMeetings];
+    updatedMeetings[selectedMeetingIndex].minutesText = editedMinutes;
 
-            await axios.put(
-                `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}`,
-                {
-                    minutesText: editedMinutes
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+    // Detect if it's a dummy meeting (no _id property)
+    const isDummy = !recentMeetings[selectedMeetingIndex]._id;
+
+    if (isDummy) {
+        // Just update the local state
+        setRecentMeetings(updatedMeetings);
+        setShowMinutes(false);
+        setSelectedMeetingIndex(null);
+        alert("Dummy meeting minutes updated locally.");
+        return;
+    }
+
+    if (!canEditMinutes) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const meeting = recentMeetings[selectedMeetingIndex];
+
+        await axios.put(
+            `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}`,
+            {
+                minutesText: editedMinutes
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-            );
+            }
+        );
 
-            await fetchMinutes();
-            setShowMinutes(false);
-            setSelectedMeetingIndex(null);
-        } catch {
-            setError('Failed to save minutes');
-        }
-    };
+        await fetchMinutes();
+        setShowMinutes(false);
+        setSelectedMeetingIndex(null);
+    } catch {
+        setError('Failed to save minutes');
+    }
+};
+
     const handleSaveNewMoM = async () => {
         if (!newMinutesText.trim()) return; // Do not save if empty
 
