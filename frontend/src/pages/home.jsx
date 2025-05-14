@@ -1,5 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { UserDataContext } from '../context/UserContext';
 import styles from '../styles/home.module.css';
 
@@ -7,11 +8,45 @@ const Home = () => {
   const { user } = useContext(UserDataContext); // Fetch user data from context
   const [notifications, setNotifications] = useState(5);
   const [showNotis, setShowNotis] = useState(false);
+  const [userCommittees, setUserCommittees] = useState([]); // State to store user's committees
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const handleNotificationClick = () => {
     setNotifications(0);
     setShowNotis(!showNotis);
   };
+
+  // Fetch committees from API
+  useEffect(() => {
+    const fetchUserCommittees = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Fetch token from localStorage
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Filter committees where the user is a member
+        const userId = user ? user.id || user._id : null; // Assuming user.id or user._id identifies the user
+        const filteredCommittees = response.data.filter((committee) =>
+          committee.chairman?._id === userId ||
+          committee.convener?._id === userId ||
+          committee.members.some((member) => member._id === userId)
+        );
+
+        setUserCommittees(filteredCommittees);
+      } catch (error) {
+        console.error('Failed to fetch committees:', error);
+        setErrorMessage('Failed to load committees. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserCommittees();
+  }, [user]);
 
   return (
     <div>
@@ -45,7 +80,6 @@ const Home = () => {
 
         {/* Main Content */}
         <div className={styles.homeContent}>
-          
           <div className={styles.top}>
             {/* Profile Section */}
             <div className={styles.pfp}>
@@ -56,7 +90,7 @@ const Home = () => {
             </div>
             <div className={styles.person}>
               <p>
-                <i className="fas fa-user"></i> Name: {user?.fullname?.firstname}{' '}
+                <i className="fas fa-user"></i> Name: {user?.fullname?.firstname || 'Guest'}{' '}
                 {user?.fullname?.lastname || ''}
               </p>
               <p>
@@ -78,7 +112,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Display Notifications if triggered */}
+          {/* Notifications */}
           {showNotis && (
             <section className={styles.notifications}>
               <button
@@ -90,6 +124,7 @@ const Home = () => {
               </button>
               <h2>Notifications</h2>
               <ul>
+                {/* Replace this with dynamic notifications if needed */}
                 <li>XYZ invited you to a meeting on 4th Feb at 3:40 pm</li>
                 <li>ABC invited you to a meeting on 10th Feb at 2:15 pm</li>
                 <li>DEF invited you to a meeting on 12th Feb at 11:00 am</li>
@@ -98,6 +133,26 @@ const Home = () => {
               </ul>
             </section>
           )}
+
+          {/* User's Committees */}
+          <section className={styles.yourCommittee}>
+            <h2>Your Committees</h2>
+            {loading ? (
+              <p>Loading committees...</p>
+            ) : errorMessage ? (
+              <p>{errorMessage}</p>
+            ) : userCommittees.length > 0 ? (
+              <ul>
+                {userCommittees.map((committee) => (
+                  <li key={committee._id}>
+                    {committee.committeeName || 'Unnamed Committee'}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>You are not part of any committees yet.</p>
+            )}
+          </section>
         </div>
       </div>
     </div>
