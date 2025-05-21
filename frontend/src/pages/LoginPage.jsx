@@ -1,8 +1,8 @@
-import React, { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from '../styles/LoginPage.module.css';
-import { UserDataContext } from '../context/UserContext';
+import { UserDataContext } from '../context/UserDataContext';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,7 +10,7 @@ function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { user, setUser } = useContext(UserDataContext); // Fixed typo
+  const { setUser } = useContext(UserDataContext);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -32,13 +32,11 @@ function LoginPage() {
       if (response.status === 200) {
         const data = response.data;
 
-
         setUser(data.user);
         localStorage.setItem('token', data.token);
 
         setSuccessMessage('Login successful! Redirecting...');
         setErrorMessage('');
-
 
         setTimeout(() => navigate('/home'), 1000);
       }
@@ -78,10 +76,10 @@ function LoginPage() {
         {successMessage && <p className={styles.successmessage}>{successMessage}</p>}
         <button type="submit">Login</button>
         <p>
-          Don't have an account? <Link to="/register">Register</Link>
+          Don&apos;t have an account? <Link to="/register">Register</Link>
         </p>
       </form>
-    </ div>
+    </div>
   );
 }
 

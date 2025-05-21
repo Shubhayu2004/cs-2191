@@ -25,16 +25,16 @@ const minutesOfMeetingSchema = new mongoose.Schema({
     },
     attendees: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'user' // lowercase to match model registration
     }],
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user', // lowercase to match model registration
         required: true
     },
     lastEditedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'user' // lowercase to match model registration
     },
     lastEditedAt: {
         type: Date

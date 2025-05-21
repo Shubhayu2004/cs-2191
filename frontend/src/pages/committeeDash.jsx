@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import "../styles/committeeDash.css";
-import { UserDataContext } from '../context/UserContext';
+import { UserDataContext } from '../context/UserDataContext';
 import React from "react";
 import { Link } from 'react-router-dom';
 
@@ -36,6 +36,9 @@ function CommitteeDashboard() {
     const canManageUsers = user?.status === "admin" || user?.status === "chairman";
     const [newMinutesText, setNewMinutesText] = useState("");
     const [showCreateMoM, setShowCreateMoM] = useState(false);
+    const [newMoMTopic, setNewMoMTopic] = useState("");
+    const [newMoMDate, setNewMoMDate] = useState("");
+    const [newMoMTime, setNewMoMTime] = useState("");
 
 
     const DUMMY_RECENT_MEETINGS = React.useMemo(() => [
@@ -176,13 +179,21 @@ function CommitteeDashboard() {
 };
 
     const handleSaveNewMoM = async () => {
-        if (!newMinutesText.trim()) return; // Do not save if empty
-
+        if (!newMoMTopic.trim() || !newMoMDate || !newMoMTime || !newMinutesText.trim()) {
+            alert("Please fill in all fields for the new MoM.");
+            return;
+        }
         try {
             const token = localStorage.getItem("token");
             await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
-                { minutesText: newMinutesText },
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/create`,
+                {
+                    committeeId: id,
+                    topic: newMoMTopic,
+                    date: newMoMDate,
+                    time: newMoMTime,
+                    minutesText: newMinutesText
+                },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -191,9 +202,12 @@ function CommitteeDashboard() {
                 }
             );
             alert("MoM saved successfully!");
-            setNewMinutesText(""); // Reset the form
-            setShowCreateMoM(false); // Close the form
-            fetchMinutes(); // Optionally refresh the list of meetings/minutes
+            setNewMinutesText("");
+            setNewMoMTopic("");
+            setNewMoMDate("");
+            setNewMoMTime("");
+            setShowCreateMoM(false);
+            fetchMinutes();
         } catch (err) {
             console.error("Error saving MoM:", err);
             alert("Failed to save MoM.");
@@ -236,6 +250,10 @@ function CommitteeDashboard() {
     };
 
     const handleSubmitSuggestion = async (meetingId) => {
+        if (!meetingId) {
+            alert("Cannot submit suggestion for this meeting.");
+            return;
+        }
         if (!suggestionText.trim()) return;
 
         try {
@@ -380,26 +398,24 @@ function CommitteeDashboard() {
                                         <td>{meeting.date}</td>
                                         <td>{meeting.time}</td>
                                         <td>
+                                            {meeting._id && isMember && (
+                                                <button
+                                                    className="suggestion-button"
+                                                    onClick={() => setSuggestionBoxIndex(prev => prev === index ? null : index)}
+                                                    style={{ marginLeft: '10px' }}
+                                                >
+                                                    Suggestion
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => handleViewMinutes(meeting.minutesText, index)}
                                                 className="minutes-button"
                                             >
                                                 View Minutes
                                             </button>
-                                            {isMember && (
-                                                <button
-                                                    className="suggestion-button"
-                                                    onClick={() =>
-                                                        setSuggestionBoxIndex(prev => prev === index ? null : index)
-                                                    }
-                                                    style={{ marginLeft: '10px' }}
-                                                >
-                                                    Suggestion
-                                                </button>
-                                            )}
                                         </td>
                                     </tr>
-                                    {suggestionBoxIndex === index && isMember && (
+                                    {suggestionBoxIndex === index && isMember && meeting._id && (
                                         <tr>
                                             <td colSpan="5">
                                                 <textarea
@@ -452,34 +468,31 @@ function CommitteeDashboard() {
                 <section className="create-mom-section">
                     <button className="close-btn" onClick={() => setShowCreateMoM(false)}>✕</button>
                     <h2>Create New Minutes of Meeting</h2>
-                    <label>
-                        Topic:</label>
+                    <label>Topic:</label>
                     <input
                         type="text"
                         placeholder="Enter meeting topic"
                         className="mom-input"
+                        value={newMoMTopic}
+                        onChange={e => setNewMoMTopic(e.target.value)}
                     />
-
-
-                    <label>
-                        Date :</label>
+                    <label>Date :</label>
                     <input
                         type="date"
                         className="mom-input"
+                        value={newMoMDate}
+                        onChange={e => setNewMoMDate(e.target.value)}
                     />
-
-
-                    <label>
-                        Time :</label>
+                    <label>Time :</label>
                     <input
                         type="time"
                         className="mom-input"
+                        value={newMoMTime}
+                        onChange={e => setNewMoMTime(e.target.value)}
                     />
-
-
                     <textarea
                         value={newMinutesText}
-                        onChange={(e) => setNewMinutesText(e.target.value)}
+                        onChange={e => setNewMinutesText(e.target.value)}
                         placeholder="Enter meeting minutes here..."
                         rows="10"
                     />

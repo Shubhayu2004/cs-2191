@@ -1,20 +1,23 @@
+require('../models/user.model'); // Ensure User model is registered before any population
 const MinutesOfMeeting = require('../models/MinutesOfMeeting');
+const Suggestion = require('../models/suggestion.model');
 
-exports.createMinutes = async (req, res) => {
+const createMinutes = async (req, res) => {
     try {
-        const { committeeId, topic, date, time, minutesText, attendees } = req.body;
-        
+        const { committeeId, topic, date, time, minutesText } = req.body;
+        if (!committeeId || !topic || !date || !time || !minutesText) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
         const minutes = new MinutesOfMeeting({
             committeeId,
             topic,
             date,
             time,
             minutesText,
-            attendees,
+            attendees: [req.user._id], // Optionally add convener as attendee
             createdBy: req.user._id,
-            status: 'draft'
+            status: 'published'
         });
-
         await minutes.save();
         res.status(201).json(minutes);
     } catch (error) {
@@ -22,12 +25,12 @@ exports.createMinutes = async (req, res) => {
     }
 };
 
-exports.getMinutesByCommittee = async (req, res) => {
+const getMinutesByCommittee = async (req, res) => {
     try {
         const { committeeId } = req.params;
         const minutes = await MinutesOfMeeting.find({ committeeId })
-            .populate('createdBy', 'name')
-            .populate('lastEditedBy', 'name')
+            .populate('createdBy', 'fullname')
+            .populate('lastEditedBy', 'fullname')
             .sort({ date: -1 });
         res.status(200).json(minutes);
     } catch (error) {
@@ -35,7 +38,7 @@ exports.getMinutesByCommittee = async (req, res) => {
     }
 };
 
-exports.updateMinutes = async (req, res) => {
+const updateMinutes = async (req, res) => {
     try {
         const { id } = req.params;
         const update = {
@@ -60,7 +63,7 @@ exports.updateMinutes = async (req, res) => {
     }
 };
 
-exports.deleteMinutes = async (req, res) => {
+const deleteMinutes = async (req, res) => {
     try {
         const minutes = await MinutesOfMeeting.findByIdAndDelete(req.params.id);
         if (!minutes) {
@@ -70,4 +73,31 @@ exports.deleteMinutes = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+const addSuggestion = async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+        const { userId, suggestion } = req.body;
+        if (!suggestion || !userId) {
+            return res.status(400).json({ message: 'Suggestion and userId are required.' });
+        }
+        const newSuggestion = new Suggestion({
+            meetingId,
+            userId,
+            suggestion
+        });
+        await newSuggestion.save();
+        res.status(201).json(newSuggestion);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = {
+  createMinutes,
+  getMinutesByCommittee,
+  updateMinutes,
+  deleteMinutes,
+  addSuggestion
 };

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
 import "../styles/committee.css";
-import { UserDataContext } from '../context/UserContext';
+import { UserDataContext } from '../context/UserDataContext';
 import CommitteeForm from '../components/CommitteeForm';
 import Sidebar from '../components/Sidebar';
 import CommitteeList from '../components/CommitteeList';

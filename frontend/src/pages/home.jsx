@@ -1,7 +1,7 @@
-import React, { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { UserDataContext } from '../context/UserContext';
+import { UserDataContext } from '../context/UserDataContext';
 import styles from '../styles/home.module.css';
 
 const Home = () => {

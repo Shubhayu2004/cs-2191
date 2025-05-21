@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axiosInstance from '../axios.config';
-import { useAuth } from '../context/UserContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Sidebar from '../components/Sidebar';
 const ManageUsers = () => {

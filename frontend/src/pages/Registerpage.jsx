@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { UserDataContext } from '../context/UserContext';
+import { UserDataContext } from '../context/UserDataContext';
 import styles from '../styles/RegisterPage.module.css'; // Optional for custom styling
 
 function RegisterPage() {
@@ -14,7 +14,7 @@ function RegisterPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const navigate = useNavigate();
-  const { user, setUser } = useContext(UserDataContext);
+  const { setUser } = useContext(UserDataContext);
 
 
   const resetFields = () => {
