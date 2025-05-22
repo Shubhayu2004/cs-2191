@@ -9,8 +9,23 @@ router.use(authUser);
 router.get('/', async (req, res) => {
     try {
         console.log('Fetching notifications for user:', req.user?._id, req.user?.email);
-        const notifications = await Notification.find({ userId: req.user._id }).sort({ createdAt: -1 });
-        console.log('Found notifications:', notifications.length);
+        let notifications = await Notification.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        // Filter out notifications for deleted committees
+        const committeeLinks = notifications
+            .map(n => n.link)
+            .filter(link => link && link.startsWith('/committeeDashboard/'));
+        const committeeIds = committeeLinks.map(link => link.split('/committeeDashboard/')[1]);
+        console.log('Committee IDs in notifications:', committeeIds);
+        const existingCommittees = await require('../models/committee.model').find({ _id: { $in: committeeIds } }, '_id');
+        const existingCommitteeIds = new Set(existingCommittees.map(c => String(c._id)));
+        console.log('Existing committee IDs:', Array.from(existingCommitteeIds));
+        const beforeCount = notifications.length;
+        notifications = notifications.filter(n => {
+            if (!n.link || !n.link.startsWith('/committeeDashboard/')) return true;
+            const id = n.link.split('/committeeDashboard/')[1];
+            return existingCommitteeIds.has(String(id));
+        });
+        console.log(`Filtered notifications: ${notifications.length} (before: ${beforeCount})`);
         res.status(200).json(notifications);
     } catch (error) {
         console.error('Notification fetch error:', error);
