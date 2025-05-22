@@ -1,13 +1,10 @@
 
-import React from 'react';
-import MemberInput from './MemberInput';
-
 const CommitteeForm = ({ 
   formData = {
     committeeName: '',
     committeePurpose: '',
-    chairman: { name: '', email: '', contactNumber: '' },
-    convener: { name: '', email: '', contactNumber: '' },
+    chairman: { name: '', email: '' },
+    convener: { name: '', email: '' },
     members: []
   }, 
   users = [], 
@@ -46,8 +43,7 @@ const CommitteeForm = ({
             if (selectedUser) {
               onChange('chairman', {
                 name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
-                email: selectedUser.email,
-                contactNumber: ""
+                email: selectedUser.email
               });
             }
           }}
@@ -71,8 +67,7 @@ const CommitteeForm = ({
             if (selectedUser) {
               onChange('convener', {
                 name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
-                email: selectedUser.email,
-                contactNumber: ""
+                email: selectedUser.email
               });
             }
           }}
@@ -99,8 +94,7 @@ const CommitteeForm = ({
                   const updatedMembers = [...formData.members];
                   updatedMembers[index] = {
                     name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
-                    email: selectedUser.email,
-                    contactNumber: ""
+                    email: selectedUser.email
                   };
                   onChange('members', updatedMembers);
                 }
@@ -143,6 +137,42 @@ const CommitteeForm = ({
       </button>
     </form>
   );
+};
+
+import PropTypes from 'prop-types';
+
+CommitteeForm.propTypes = {
+  formData: PropTypes.shape({
+    committeeName: PropTypes.string,
+    committeePurpose: PropTypes.string,
+    chairman: PropTypes.shape({
+      name: PropTypes.string,
+      email: PropTypes.string
+    }),
+    convener: PropTypes.shape({
+      name: PropTypes.string,
+      email: PropTypes.string
+    }),
+    members: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string,
+        email: PropTypes.string
+      })
+    )
+  }),
+  users: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired,
+      fullname: PropTypes.shape({
+        firstname: PropTypes.string.isRequired,
+        lastname: PropTypes.string.isRequired
+      }).isRequired
+    })
+  ),
+  onSubmit: PropTypes.func,
+  onChange: PropTypes.func,
+  onAddMember: PropTypes.func
 };
 
 export default CommitteeForm;

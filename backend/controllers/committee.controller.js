@@ -1,8 +1,11 @@
 const Committee = require('../models/committee.model');
 const mongoose = require('mongoose');
+const { sendNotification } = require('../controllers/minutes.controller');
+const { getUserIdsByEmails } = require('./user.controller');
 
 exports.createCommittee = async (req, res) => {
     try {
+        console.log('createCommittee: called with body:', req.body);
         const { committeeName, committeePurpose, chairman, convener, members } = req.body;
         
         // Validate required fields
@@ -18,22 +21,36 @@ exports.createCommittee = async (req, res) => {
             committeePurpose, 
             chairman: {
                 name: chairman.name,
-                email: chairman.email,
-                contactNumber: chairman.contactNumber || ''
+                email: chairman.email
             }, 
             convener: {
                 name: convener.name,
-                email: convener.email,
-                contactNumber: convener.contactNumber || ''
+                email: convener.email
             }, 
             members: members.map(member => ({
                 name: member.name,
-                email: member.email,
-                contactNumber: member.contactNumber || ''
+                email: member.email
             }))
         });
 
         await committee.save();
+
+        // Try notification delivery, but do not fail committee creation if notification fails
+        try {
+            console.log('createCommittee: preparing to notify members');
+            const allMemberEmails = [chairman.email, convener.email, ...members.map(m => m.email)];
+            console.log('createCommittee: allMemberEmails:', allMemberEmails);
+            const userIds = await getUserIdsByEmails(allMemberEmails);
+            console.log('createCommittee: userIds from emails:', userIds);
+            const message = `You have been added to the committee: ${committee.committeeName}`;
+            const link = `/committeeDashboard/${committee._id}`;
+            console.log('createCommittee: calling sendNotification');
+            await sendNotification(userIds, message, link);
+            console.log('createCommittee: sendNotification completed');
+        } catch (notifyErr) {
+            console.error('Notification delivery failed:', notifyErr);
+            // Optionally, you could log this to a DB or monitoring service
+        }
         res.status(201).json(committee);
     } catch (error) {
         console.error('Committee creation error:', error);

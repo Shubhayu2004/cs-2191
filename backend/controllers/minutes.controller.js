@@ -1,6 +1,8 @@
 require('../models/user.model'); // Ensure User model is registered before any population
 const MinutesOfMeeting = require('../models/MinutesOfMeeting');
 const Suggestion = require('../models/suggestion.model');
+const Notification = require('../models/notification.model');
+const { getUserIdsByEmails } = require('./user.controller');
 
 const createMinutes = async (req, res) => {
     try {
@@ -14,11 +16,20 @@ const createMinutes = async (req, res) => {
             date,
             time,
             minutesText,
-            attendees: [req.user._id], // Optionally add convener as attendee
+            attendees: [req.user._id],
             createdBy: req.user._id,
             status: 'published'
         });
         await minutes.save();
+        // Notify all committee members about the new meeting
+        const committee = await require('../models/committee.model').findById(committeeId);
+        if (committee) {
+            const allMemberEmails = [committee.chairman.email, committee.convener.email, ...committee.members.map(m => m.email)];
+            const userIds = await getUserIdsByEmails(allMemberEmails);
+            const message = `A new meeting has been scheduled for committee: ${committee.committeeName}`;
+            const link = `/committeeDashboard/${committeeId}`;
+            await sendNotification(userIds, message, link);
+        }
         res.status(201).json(minutes);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -88,16 +99,69 @@ const addSuggestion = async (req, res) => {
             suggestion
         });
         await newSuggestion.save();
+        // Notify the convener of the committee for this meeting
+        const mom = await MinutesOfMeeting.findById(meetingId);
+        if (mom) {
+            const committee = await require('../models/committee.model').findById(mom.committeeId);
+            if (committee) {
+                const convenerEmail = committee.convener.email;
+                const convenerIdArr = await getUserIdsByEmails([convenerEmail]);
+                const message = `A new suggestion was submitted: "${suggestion}"`;
+                const link = `/committeeDashboard/${committee._id}`;
+                await sendNotification(convenerIdArr, message, link);
+            }
+        }
         res.status(201).json(newSuggestion);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const getSuggestionsByMeeting = async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+        const suggestions = await Suggestion.find({ meetingId })
+            .populate('userId', 'fullname email')
+            .sort({ createdAt: -1 });
+        res.status(200).json(suggestions);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
+const deleteSuggestion = async (req, res) => {
+    try {
+        const suggestion = await Suggestion.findByIdAndDelete(req.params.id);
+        if (!suggestion) {
+            return res.status(404).json({ message: 'Suggestion not found' });
+        }
+        res.status(200).json({ message: 'Suggestion deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Add this function to send notifications to users
+async function sendNotification(userIds, message, link = null) {
+    console.log('sendNotification: function called');
+    if (!Array.isArray(userIds)) userIds = [userIds];
+    console.log('sendNotification: userIds:', userIds, 'message:', message, 'link:', link);
+    if (!userIds.length) {
+        console.warn('sendNotification called with empty userIds');
+        return;
+    }
+    const notifications = userIds.map(userId => ({ userId, message, link }));
+    const result = await Notification.insertMany(notifications);
+    console.log('sendNotification: notifications inserted:', result.length);
+}
+
 module.exports = {
-  createMinutes,
-  getMinutesByCommittee,
-  updateMinutes,
-  deleteMinutes,
-  addSuggestion
+    createMinutes,
+    getMinutesByCommittee,
+    updateMinutes,
+    deleteMinutes,
+    addSuggestion,
+    getSuggestionsByMeeting,
+    deleteSuggestion,
+    sendNotification
 };

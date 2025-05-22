@@ -1,4 +1,3 @@
-
 const userModel = require('../models/user.model');
 const userService = require('../services/user.service');
 const { validationResult } = require('express-validator');
@@ -115,3 +114,15 @@ module.exports.getUserNames = async (req, res) => {
     }
 
 }
+module.exports.getUserIdsByEmails = async (emails) => {
+    // Accepts array of emails, returns array of user _ids
+    if (!Array.isArray(emails) || emails.length === 0) {
+        console.warn('getUserIdsByEmails called with empty or invalid emails:', emails);
+        return [];
+    }
+    const users = await userModel.find({ email: { $in: emails } }).select('_id email');
+    if (users.length !== emails.length) {
+        console.warn('Some emails not found in user collection:', emails, 'Found:', users.map(u => u.email));
+    }
+    return users.map(u => u._id);
+};

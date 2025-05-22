@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 
 const MemberInput = ({ member, onChange }) => {
   return (
@@ -17,15 +17,16 @@ const MemberInput = ({ member, onChange }) => {
         onChange={(e) => onChange('email', e.target.value)}
         required
       />
-      <input
-        type="text"
-        placeholder="Contact Number"
-        value={member.contactNumber}
-        onChange={(e) => onChange('contactNumber', e.target.value)}
-        required
-      />
     </div>
   );
+};
+
+MemberInput.propTypes = {
+  member: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    email: PropTypes.string.isRequired
+  }).isRequired,
+  onChange: PropTypes.func.isRequired
 };
 
 export default MemberInput;

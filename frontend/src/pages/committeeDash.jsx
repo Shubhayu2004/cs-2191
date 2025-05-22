@@ -302,14 +302,12 @@ function CommitteeDashboard() {
                         <h4>Chairperson</h4>
                         <p>Name: {committee.chairman.name}</p>
                         <p>Email: {committee.chairman.email}</p>
-                        <p>Contact: {committee.chairman.contactNumber}</p>
                     </div>
 
                     <div className="convener">
                         <h4>Convener</h4>
                         <p>Name: {committee.convener.name}</p>
                         <p>Email: {committee.convener.email}</p>
-                        <p>Contact: {committee.convener.contactNumber}</p>
                     </div>
                 </div>
             </div>
@@ -357,7 +355,6 @@ function CommitteeDashboard() {
                             <th>Sl No.</th>
                             <th>Name</th>
                             <th>Email ID</th>
-                            <th>Contact No.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -366,7 +363,6 @@ function CommitteeDashboard() {
                                 <td>{index + 1}</td>
                                 <td>{member.name}</td>
                                 <td>{member.email}</td>
-                                <td>{member.contactNumber}</td>
                             </tr>
                         ))}
                     </tbody>

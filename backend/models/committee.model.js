@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 // Define the schema for members
 const memberSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true },
-    contactNumber: { type: String, default : '' }
+    email: { type: String, required: true }
 });
 
 // Define the schema for past meetings
@@ -25,8 +24,14 @@ const upcomingMeetingSchema = new mongoose.Schema({
 const committeeSchema = new mongoose.Schema({
     committeeName: { type: String, required: true },
     committeePurpose: { type: String, required: true },
-    chairman: { type: memberSchema, required: true },
-    convener: { type: memberSchema, required: true },
+    chairman: { 
+        name: { type: String, required: true },
+        email: { type: String, required: true }
+    },
+    convener: {
+        name: { type: String, required: true },
+        email: { type: String, required: true }
+    },
     members: [memberSchema],
     pastMeetings: [pastMeetingSchema], // Optional array of past meetings
     upcomingMeetings: [upcomingMeetingSchema] // Optional array of upcoming meetings

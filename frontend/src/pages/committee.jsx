@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import "../styles/committee.css";
 import { UserDataContext } from '../context/UserDataContext';
@@ -12,8 +12,8 @@ const CommitteeApp = () => {
   const [formData, setFormData] = useState({
     committeeName: "",
     committeePurpose: "",
-    chairman: { name: "", email: "", contactNumber: "" },
-    convenor: { name: "", email: "", contactNumber: "" },
+    chairman: { name: "", email: "" },
+    convener: { name: "", email: "" },
     members: []
   });
   const [committees, setCommittees] = useState([]);
@@ -78,17 +78,14 @@ const CommitteeApp = () => {
                 chairman: {
                     name: formData.chairman.name,
                     email: formData.chairman.email,
-                    contactNumber: formData.chairman.contactNumber || ''
                 },
                 convener: {
                     name: formData.convener.name,
                     email: formData.convener.email,
-                    contactNumber: formData.convener.contactNumber || ''
                 },
                 members: formData.members.map(member => ({
                     name: member.name,
                     email: member.email,
-                    contactNumber: member.contactNumber || ''
                 }))
             },
             {
@@ -104,8 +101,8 @@ const CommitteeApp = () => {
         setFormData({
             committeeName: "",
             committeePurpose: "",
-            chairman: { name: "", email: "", contactNumber: "" },
-            convener: { name: "", email: "", contactNumber: "" },
+            chairman: { name: "", email: "" },
+            convener: { name: "", email: "" },
             members: []
         });
 
@@ -144,7 +141,7 @@ const CommitteeApp = () => {
             onChange={handleFormChange}
             onAddMember={() => handleFormChange('members', [
               ...formData.members, 
-              { name: "", email: "", contactNumber: "" }
+              { name: "", email: "" }
             ])}
           />
         )}

@@ -6,15 +6,34 @@ import styles from '../styles/home.module.css';
 
 const Home = () => {
   const { user } = useContext(UserDataContext); // Fetch user data from context
-  const [notifications, setNotifications] = useState(5);
+  const [notifications, setNotifications] = useState([]);
   const [showNotis, setShowNotis] = useState(false);
   const [userCommittees, setUserCommittees] = useState([]); // State to store user's committees
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token'); // Fetch token from localStorage
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/notifications`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNotifications(response.data);
+    } catch {
+      setNotifications([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
   const handleNotificationClick = () => {
-    setNotifications(0);
     setShowNotis(!showNotis);
+    // Optionally, mark all as read here
   };
 
   // Fetch committees from API
@@ -110,8 +129,8 @@ const Home = () => {
             <div className={styles.noti}>
               <button onClick={handleNotificationClick}>
                 <img src="/assets/noti.png" alt="Notifications" />
-                {notifications > 0 && (
-                  <span className={styles.notiCount}>{notifications}</span>
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className={styles.notiCount}>{notifications.filter(n => !n.isRead).length}</span>
                 )}
               </button>
             </div>
@@ -129,12 +148,17 @@ const Home = () => {
               </button>
               <h2>Notifications</h2>
               <ul>
-                {/* Replace this with dynamic notifications if needed */}
-                <li>XYZ invited you to a meeting on 4th Feb at 3:40 pm</li>
-                <li>ABC invited you to a meeting on 10th Feb at 2:15 pm</li>
-                <li>DEF invited you to a meeting on 12th Feb at 11:00 am</li>
-                <li>GHI invited you to a meeting on 15th Feb at 4:45 pm</li>
-                <li>JKL invited you to a meeting on 18th Feb at 9:30 am</li>
+                {notifications.length === 0 && <li>No notifications.</li>}
+                {notifications.map((noti) => (
+                  <li key={noti._id} style={{ fontWeight: noti.isRead ? 'normal' : 'bold' }}>
+                    {noti.link ? (
+                      <Link to={noti.link}>{noti.message}</Link>
+                    ) : (
+                      noti.message
+                    )}
+                    <span style={{ marginLeft: 8, fontSize: 10, color: '#888' }}>{new Date(noti.createdAt).toLocaleString()}</span>
+                  </li>
+                ))}
               </ul>
             </section>
           )}

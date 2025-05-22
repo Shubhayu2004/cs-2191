@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from 'react'
+import PropTypes from 'prop-types'
 import { UserDataContext } from '../context/UserDataContext'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -31,7 +32,7 @@ const UserProtectWrapper = ({
                 localStorage.removeItem('token')
                 navigate('/login')
             })
-    }, [ token ])
+    }, [token, navigate, setUser])
 
     if (isLoading) {
         return (
@@ -44,6 +45,9 @@ const UserProtectWrapper = ({
             {children}
         </>
     )
+}
+UserProtectWrapper.propTypes = {
+    children: PropTypes.node
 }
 
 export default UserProtectWrapper
