@@ -223,15 +223,13 @@ function CommitteeDashboard() {
         doc.save("minutes.pdf");
     };
 
-    const handleLeaveCommittee = async () => {
+    const handleDissolveCommittee = async () => {
+        const confirmed = window.confirm('Are you sure you want to dissolve this committee? This action cannot be undone.');
+        if (!confirmed) return;
         try {
             const token = localStorage.getItem('token');
-            const confirmed = window.confirm('Are you sure you want to leave this committee?');
-            if (!confirmed) return;
-
-            await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/api/committees/${id}/leave`,
-                { userId: user._id },
+            await axios.delete(
+                `${import.meta.env.VITE_BASE_URL}/api/committees/${id}`,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -239,13 +237,12 @@ function CommitteeDashboard() {
                     }
                 }
             );
-
-            alert('You have successfully left the committee');
+            alert('Committee dissolved successfully.');
             navigate('/committee');
         } catch (err) {
-            console.error('Error leaving committee:', err);
-            setError(err.response?.data?.message || 'Error leaving committee');
-            alert('Failed to leave committee');
+            console.error('Error dissolving committee:', err);
+            setError(err.response?.data?.message || 'Error dissolving committee');
+            alert('Failed to dissolve committee');
         }
     };
 
@@ -314,7 +311,7 @@ function CommitteeDashboard() {
 
             <div className="utility">
 
-                {canManageUsers && (
+                {canManageUsers && user?.status !== "chairman" && (
                     <Link
                         to="/manage-users"
                         state={{ committeeName: committee.committeeName }}
@@ -322,7 +319,6 @@ function CommitteeDashboard() {
                     >
                         Manage Users
                     </Link>
-
                 )}
 
                 {canScheduleMeetings && (
@@ -342,9 +338,12 @@ function CommitteeDashboard() {
                     </button>
                 )}
 
-                <button onClick={handleLeaveCommittee} className="leave-btn">
-                    Leave Committee
-                </button>
+                {/* Dissolve Committee button for chairman only */}
+                {user?.status === "chairman" && (
+                    <button onClick={handleDissolveCommittee} className="dissolve-btn" style={{backgroundColor: 'red', color: 'white'}}>
+                        Dissolve Committee
+                    </button>
+                )}
             </div>
 
             <div className="members">

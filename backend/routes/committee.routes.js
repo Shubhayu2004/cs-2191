@@ -19,4 +19,5 @@ router.get('/:id',
     ], 
     committeeController.getCommitteeById
 );
+router.delete('/:id', committeeController.deleteCommittee);
 module.exports = router;
