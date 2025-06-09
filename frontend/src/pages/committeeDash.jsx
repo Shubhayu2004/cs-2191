@@ -27,6 +27,9 @@ function CommitteeDashboard() {
     const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null);
     const [suggestionBoxIndex, setSuggestionBoxIndex] = useState(null);
     const [suggestionText, setSuggestionText] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
     const isConvener = user?.status === "convener";
     const isMember = user?.status === "member";
@@ -276,6 +279,52 @@ function CommitteeDashboard() {
         }
     };
 
+    const handleViewSuggestions = async () => {
+        setShowSuggestions((prev) => !prev);
+        if (!showSuggestions) {
+            setLoadingSuggestions(true);
+            try {
+                const token = localStorage.getItem('token');
+                // Fetch all meetings for this committee
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                const meetings = response.data || [];
+                // Fetch suggestions for each meeting
+                const allSuggestions = [];
+                for (const meeting of meetings) {
+                    if (!meeting._id) continue;
+                    const sugRes = await axios.get(
+                        `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}/suggestions`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        }
+                    );
+                    const suggestionsForMeeting = (sugRes.data || []).map(s => ({
+                        ...s,
+                        meetingTopic: meeting.topic,
+                        meetingDate: meeting.date,
+                    }));
+                    allSuggestions.push(...suggestionsForMeeting);
+                }
+                setSuggestions(allSuggestions);
+            } catch (err) {
+                setSuggestions([]);
+            } finally {
+                setLoadingSuggestions(false);
+            }
+        }
+    };
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">Error: {error}</div>;
     if (!committee) return <div>No committee found</div>;
@@ -328,6 +377,11 @@ function CommitteeDashboard() {
                     >
                         Schedule Meeting
                     </Link>
+                )}
+                {isConvener && (
+                    <button className="upcoming-btn" onClick={handleViewSuggestions}>
+                        {showSuggestions ? 'Hide Suggestions' : 'View Suggestions'}
+                    </button>
                 )}
                 <a
                     href={`/scheduleCalendar?committeeId=${id}`}
@@ -489,7 +543,7 @@ function CommitteeDashboard() {
                         type="time"
                         className="mom-input"
                         value={newMoMTime}
-                        onChange={e => setNewMoMTime(e.target.value)}
+                        onChange
                     />
                     <textarea
                         value={newMinutesText}
@@ -500,6 +554,39 @@ function CommitteeDashboard() {
                     <button onClick={handleSaveNewMoM} className="save-mom-btn">
                         Save MoM
                     </button>
+                </section>
+            )}
+
+            {showSuggestions && (
+                <section className="suggestions-section">
+                    <button className="close-btn" onClick={() => setShowSuggestions(false)}>✕</button>
+                    <h2>Member Suggestions</h2>
+                    {loadingSuggestions ? (
+                        <div>Loading suggestions...</div>
+                    ) : suggestions.length === 0 ? (
+                        <div>No suggestions found.</div>
+                    ) : (
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Meeting Topic</th>
+                                    <th>Meeting Date</th>
+                                    <th>Member</th>
+                                    <th>Suggestion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {suggestions.map((s, idx) => (
+                                    <tr key={s._id || idx}>
+                                        <td>{s.meetingTopic}</td>
+                                        <td>{s.meetingDate ? new Date(s.meetingDate).toLocaleDateString() : ''}</td>
+                                        <td>{s.userId?.fullname || s.userId?.email || 'Unknown'}</td>
+                                        <td>{s.suggestion}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </section>
             )}
 
