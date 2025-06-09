@@ -152,7 +152,24 @@ const Home = () => {
                 {notifications.map((noti) => (
                   <li key={noti._id} style={{ fontWeight: noti.isRead ? 'normal' : 'bold' }}>
                     {noti.link ? (
-                      <Link to={noti.link}>{noti.message}</Link>
+                      <Link
+                        to={noti.link}
+                        onClick={async () => {
+                          if (!noti.isRead) {
+                            try {
+                              const token = localStorage.getItem('token');
+                              await axios.put(`${import.meta.env.VITE_BASE_URL}/api/notifications/${noti._id}/read`, {}, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              setNotifications((prev) => prev.map(n => n._id === noti._id ? { ...n, isRead: true } : n));
+                            } catch {
+                              // Optionally handle error
+                            }
+                          }
+                        }}
+                      >
+                        {noti.message}
+                      </Link>
                     ) : (
                       noti.message
                     )}
