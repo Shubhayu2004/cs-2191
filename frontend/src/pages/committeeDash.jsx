@@ -317,7 +317,7 @@ function CommitteeDashboard() {
                     allSuggestions.push(...suggestionsForMeeting);
                 }
                 setSuggestions(allSuggestions);
-            } catch (err) {
+            } catch {
                 setSuggestions([]);
             } finally {
                 setLoadingSuggestions(false);
