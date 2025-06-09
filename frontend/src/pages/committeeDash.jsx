@@ -1,11 +1,10 @@
 import { useState, useEffect, useContext, useCallback } from "react";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { jsPDF } from "jspdf";
 import "../styles/committeeDash.css";
 import { UserDataContext } from '../context/UserDataContext';
 import React from "react";
-import { Link } from 'react-router-dom';
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
@@ -322,11 +321,18 @@ function CommitteeDashboard() {
                 )}
 
                 {canScheduleMeetings && (
-                    <a href="/scheduleMeeting" className="schedule-btn">
+                    <Link
+                        to="/scheduleMeeting"
+                        state={{ committeeId: id }}
+                        className="schedule-btn"
+                    >
                         Schedule Meeting
-                    </a>
+                    </Link>
                 )}
-                <a href="/scheduleCalendar" className="upcoming-btn">
+                <a
+                    href={`/scheduleCalendar?committeeId=${id}`}
+                    className="upcoming-btn"
+                >
                     Upcoming Meetings
                 </a>
                 <button className="upcoming-btn" onClick={handleToggleRecentMeetings}>

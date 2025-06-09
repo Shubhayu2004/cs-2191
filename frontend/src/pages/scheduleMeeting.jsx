@@ -1,68 +1,66 @@
 import styles from "../styles/scheduleMeeting.module.css";
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import Sidebar from '../components/Sidebar';
+import { useParams, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const ScheduleMeeting = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [scheduleMeetingVisibility, setScheduleMeetingVisibility] = useState(false);
-    // const [showCommitteeList, setShowCommitteeList] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         date: '',
         startTime: '',
-        location: '',
         description: '',
     });
-    // const committee = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    // const [selectedCommittees, setSelectedCommittees] = useState([]);
-    const [meetings, setMeetings] = useState([]);
-
-    useEffect(() => {
-        const storedMeetings = JSON.parse(localStorage.getItem('meetings')) || [];
-        setMeetings(storedMeetings);
-    }, []);
+    const location = useLocation();
+    const params = useParams();
+    // Try to get committeeId from route state, fallback to useParams
+    const committeeId = location.state?.committeeId || params.id;
 
     const toggleScheduleMeetingVisibility = () => {
         setScheduleMeetingVisibility(!scheduleMeetingVisibility);
     };
-
-    // const toggleCommitteeList = () => {
-    //     setShowCommitteeList(!showCommitteeList);
-    // };
-
-    // const handleCommitteeSelection = (member) => {
-    //     setSelectedCommittees((prev) =>
-    //         prev.includes(member)
-    //             ? prev.filter((item) => item !== member)
-    //             : [...prev, member]
-    //     );
-    // };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [name]: value }));
     };
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        const { title, date, startTime } = formData;
-
+        const { title, date, startTime, description } = formData;
         if (title && date && startTime) {
-            const newMeeting = { ...formData };
-            const updatedMeetings = [...meetings, newMeeting];
-            setMeetings(updatedMeetings);
-            localStorage.setItem('meetings', JSON.stringify(updatedMeetings));
-
-            alert(`Meeting Scheduled: ${title} on ${date} at ${startTime}`);
-            setFormData({
-                title: '',
-                date: '',
-                startTime: '',
-                location: '',
-                description: '',
-            });
-            // setSelectedCommittees([]);
-            setScheduleMeetingVisibility(false);
+            try {
+                const token = localStorage.getItem('token');
+                await axios.post(
+                    `${import.meta.env.VITE_BASE_URL}/api/minutes/create`,
+                    {
+                        committeeId,
+                        topic: title,
+                        date,
+                        time: startTime,
+                        minutesText: description || 'No minutes yet',
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                alert(`Meeting Scheduled: ${title} on ${date} at ${startTime}`);
+                setFormData({
+                    title: '',
+                    date: '',
+                    startTime: '',
+                    location: '',
+                    description: '',
+                });
+                setScheduleMeetingVisibility(false);
+            } catch {
+                alert('Failed to schedule meeting.');
+            }
         } else {
             alert('Please fill in all required fields');
         }
@@ -83,28 +81,6 @@ const ScheduleMeeting = () => {
             </a>
             {scheduleMeetingVisibility && (
                 <section className={styles.scheduleMeetingForm}>
-                    {/* <button className={styles.btnForMeeting} onClick={toggleCommitteeList}>
-                        Select Committee
-                    </button>
-                    {showCommitteeList && (
-                        <div className={styles.committeeListForMeeting}>
-                            {committee.map((member) => (
-                                <div
-                                    key={member}
-                                    className={`${styles.committeeForMeeting} ${selectedCommittees.includes(member) ? styles.selected : ''}`}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        id={member}
-                                        value={member}
-                                        checked={selectedCommittees.includes(member)}
-                                        onChange={() => handleCommitteeSelection(member)}
-                                    />
-                                    <label htmlFor={member}>{member}</label>
-                                </div>
-                            ))}
-                        </div>
-                    )} */}
                     <form onSubmit={handleFormSubmit}>
                         <label htmlFor="title">Title:</label>
                         <input
@@ -132,14 +108,6 @@ const ScheduleMeeting = () => {
                             value={formData.startTime}
                             onChange={handleInputChange}
                             required
-                        />
-                        <label htmlFor="location">Location/Link:</label>
-                        <input
-                            type="text"
-                            id="location"
-                            name="location"
-                            value={formData.location}
-                            onChange={handleInputChange}
                         />
                         <label htmlFor="description">Description:</label>
                         <textarea

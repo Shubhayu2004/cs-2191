@@ -1,33 +1,66 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate, useLocation } from "react-router-dom"; // Import useNavigate and useLocation
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import styles from "../styles/scheduleMeeting.module.css";
 import Sidebar from '../components/Sidebar';
+import axios from "axios";
 
 const localizer = momentLocalizer(moment);
 
 const ScheduledMeetingsCalendar = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [events, setEvents] = useState([]);
-    const [selectedEvent, setSelectedEvent] = useState(null); // State for selected event
-    const navigate = useNavigate(); // Initialize navigate function
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Get committeeId from query string
+    const searchParams = new URLSearchParams(location.search);
+    const committeeId = searchParams.get("committeeId");
 
     useEffect(() => {
-        const storedMeetings = JSON.parse(localStorage.getItem("meetings")) || [];
-
-        const formattedEvents = storedMeetings.map((meeting, index) => ({
-            id: index,
-            title: meeting.title,
-            start: new Date(`${meeting.date}T${meeting.startTime}`),
-            end: new Date(`${meeting.date}T${meeting.startTime}`),
-            location: meeting.location,
-            description: meeting.description,
-        }));
-
-        setEvents(formattedEvents);
-    }, []);
+        async function fetchMeetings() {
+            if (!committeeId) return;
+            try {
+                const token = localStorage.getItem("token");
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${committeeId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+                const meetings = response.data || [];
+                console.log('Fetched meetings:', meetings);
+                const formattedEvents = meetings.map((meeting, index) => {
+                    const baseDate = new Date(meeting.date);
+                    let startDate = new Date(baseDate);
+                    if (meeting.time) {
+                        const [hours, minutes] = meeting.time.split(":");
+                        startDate.setHours(Number(hours), Number(minutes), 0, 0);
+                    }
+                    console.log('Event:', meeting.topic, 'Date:', meeting.date, 'Time:', meeting.time, 'Start:', startDate);
+                    return {
+                        id: meeting._id || index,
+                        title: meeting.topic,
+                        start: startDate,
+                        end: startDate,
+                        location: meeting.location || "",
+                        description: meeting.minutesText || meeting.description || "",
+                    };
+                });
+                setEvents(formattedEvents);
+            } catch (err) {
+                console.error('Error fetching meetings:', err);
+                setEvents([]);
+            }
+        }
+        fetchMeetings();
+    }, [committeeId]);
 
     const handleEventSelect = (event) => {
         setSelectedEvent(event); // Update the selected event details

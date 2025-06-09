@@ -27,7 +27,8 @@ const createMinutes = async (req, res) => {
             const allMemberEmails = [committee.chairman.email, committee.convener.email, ...committee.members.map(m => m.email)];
             const userIds = await getUserIdsByEmails(allMemberEmails);
             const message = `A new meeting has been scheduled for committee: ${committee.committeeName}`;
-            const link = `/committeeDashboard/${committeeId}`;
+            // Link to the calendar page for this committee
+            const link = `/scheduleCalendar?committeeId=${committeeId}`;
             await sendNotification(userIds, message, link);
         }
         res.status(201).json(minutes);
