@@ -359,7 +359,7 @@ function CommitteeDashboard() {
 
             <div className="utility">
 
-                {canManageUsers && user?.status !== "chairman" && (
+                {canManageUsers && user?.status === "admin" && (
                     <Link
                         to="/manage-users"
                         state={{ committeeName: committee.committeeName }}
@@ -580,7 +580,13 @@ function CommitteeDashboard() {
                                     <tr key={s._id || idx}>
                                         <td>{s.meetingTopic}</td>
                                         <td>{s.meetingDate ? new Date(s.meetingDate).toLocaleDateString() : ''}</td>
-                                        <td>{s.userId?.fullname || s.userId?.email || 'Unknown'}</td>
+                                        <td>{
+  s.userId && typeof s.userId === 'object'
+    ? (s.userId.firstname && s.userId.lastname
+        ? `${s.userId.firstname} ${s.userId.lastname}`
+        : (typeof s.userId.fullname === 'string' ? s.userId.fullname : (typeof s.userId.email === 'string' ? s.userId.email : JSON.stringify(s.userId))))
+    : (typeof s.userId === 'string' ? s.userId : 'Unknown')
+}</td>
                                         <td>{s.suggestion}</td>
                                     </tr>
                                 ))}

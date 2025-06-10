@@ -11,5 +11,6 @@ router.get('/committee/:committeeId', minutesController.getMinutesByCommittee);
 router.put('/:id', minutesController.updateMinutes);
 router.delete('/:id', minutesController.deleteMinutes);
 router.post('/:meetingId/suggestions', minutesController.addSuggestion);
+router.get('/:meetingId/suggestions', minutesController.getSuggestionsByMeeting);
 
 module.exports = router;
