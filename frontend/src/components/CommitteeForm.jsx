@@ -1,4 +1,3 @@
-
 const CommitteeForm = ({ 
   formData = {
     committeeName: '',
@@ -93,6 +92,7 @@ const CommitteeForm = ({
                 if (selectedUser) {
                   const updatedMembers = [...formData.members];
                   updatedMembers[index] = {
+                    ...updatedMembers[index],
                     name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
                     email: selectedUser.email
                   };
@@ -114,6 +114,22 @@ const CommitteeForm = ({
                   </option>
                 ))
               }
+            </select>
+            <select
+              value={member.role || 'member'}
+              onChange={e => {
+                const updatedMembers = [...formData.members];
+                updatedMembers[index] = {
+                  ...updatedMembers[index],
+                  role: e.target.value
+                };
+                onChange('members', updatedMembers);
+              }}
+              required
+            >
+              <option value="member">Member</option>
+              <option value="convener">Convener</option>
+              <option value="chairman">Chairman</option>
             </select>
             <button 
               type="button" 

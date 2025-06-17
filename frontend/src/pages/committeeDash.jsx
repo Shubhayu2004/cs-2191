@@ -31,11 +31,25 @@ function CommitteeDashboard() {
     const [suggestions, setSuggestions] = useState([]);
     const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-    const isConvener = user?.status === "convener";
-    const isMember = user?.status === "member";
+    // Determine the user's role for this committee
+    let userCommitteeRole = null;
+    if (committee && user?.email) {
+        if (committee.members && Array.isArray(committee.members)) {
+            const found = committee.members.find(m => m.email === user.email);
+            if (found) userCommitteeRole = found.role;
+        }
+    }
+
+    // Global admin check (remains admin for all committees)
+    const isAdmin = user?.status === "admin";
+    // Role-based access for this committee
+    const isConvener = userCommitteeRole === "convener";
+    const isMember = userCommitteeRole === "member";
+    const isChairman = userCommitteeRole === "chairman";
+    // Admin can always see Manage Users, but other actions are per-committee role
     const canEditMinutes = isConvener;
     const canScheduleMeetings = isConvener;
-    const canManageUsers = user?.status === "admin" || user?.status === "chairman";
+    const canManageUsers = isAdmin || isChairman;
     const [newMinutesText, setNewMinutesText] = useState("");
     const [showCreateMoM, setShowCreateMoM] = useState(false);
     const [newMoMTopic, setNewMoMTopic] = useState("");

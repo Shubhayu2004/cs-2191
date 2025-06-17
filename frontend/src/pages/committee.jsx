@@ -86,6 +86,7 @@ const CommitteeApp = () => {
                 members: formData.members.map(member => ({
                     name: member.name,
                     email: member.email,
+                    role: member.role || 'member'
                 }))
             },
             {

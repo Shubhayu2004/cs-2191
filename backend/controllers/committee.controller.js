@@ -29,7 +29,8 @@ exports.createCommittee = async (req, res) => {
             }, 
             members: members.map(member => ({
                 name: member.name,
-                email: member.email
+                email: member.email,
+                role: member.role || 'member'
             }))
         });
 

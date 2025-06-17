@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 // Define the schema for members
 const memberSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true }
+    email: { type: String, required: true },
+    role: { type: String, enum: ['member', 'convener', 'chairman'], required: true }
 });
 
 // Define the schema for past meetings
