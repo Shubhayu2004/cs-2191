@@ -21,14 +21,16 @@ const createMinutes = async (req, res) => {
             status: 'published'
         });
         await minutes.save();
-        // Notify all committee members about the new meeting
+        // Notify all committee members (except the convener) about the new MoM
         const committee = await require('../models/committee.model').findById(committeeId);
         if (committee) {
-            const allMemberEmails = [committee.chairman.email, committee.convener.email, ...committee.members.map(m => m.email)];
+            // Exclude the convener (req.user.email) from notification recipients
+            const allMemberEmails = [committee.chairman.email, ...committee.members.map(m => m.email)]
+                .filter(email => email !== req.user.email);
             const userIds = await getUserIdsByEmails(allMemberEmails);
-            const message = `A new meeting has been scheduled for committee: ${committee.committeeName}`;
-            // Link to the calendar page for this committee
-            const link = `/scheduleCalendar?committeeId=${committeeId}`;
+            const message = `A new MoM has been created for committee: ${committee.committeeName}`;
+            // Link to the committee dashboard for this committee
+            const link = `/committeeDashboard/${committeeId}`;
             await sendNotification(userIds, message, link);
         }
         res.status(201).json(minutes);

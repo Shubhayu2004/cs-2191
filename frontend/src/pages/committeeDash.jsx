@@ -543,7 +543,7 @@ function CommitteeDashboard() {
                         type="time"
                         className="mom-input"
                         value={newMoMTime}
-                        onChange
+                        onChange={e => setNewMoMTime(e.target.value)}
                     />
                     <textarea
                         value={newMinutesText}
