@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 // Define the schema for members
 const memberSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
     name: { type: String, required: true },
     email: { type: String, required: true },
     role: { type: String, enum: ['member', 'convener', 'chairman'], required: true }
@@ -26,10 +27,12 @@ const committeeSchema = new mongoose.Schema({
     committeeName: { type: String, required: true },
     committeePurpose: { type: String, required: true },
     chairman: { 
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
         name: { type: String, required: true },
         email: { type: String, required: true }
     },
     convener: {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
         name: { type: String, required: true },
         email: { type: String, required: true }
     },

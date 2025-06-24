@@ -28,9 +28,8 @@ const userSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: 'member',
-        enum: ['member', 'admin', 'convenor' , 'chairman'],
-        
+        default: undefined, // Only set if admin
+        enum: ['admin'], // Only admin is a user property
     },
 })
 

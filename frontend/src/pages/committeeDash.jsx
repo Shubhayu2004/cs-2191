@@ -373,10 +373,10 @@ function CommitteeDashboard() {
 
             <div className="utility">
 
-                {canManageUsers && user?.status === "admin" && (
+                {canManageUsers && (
                     <Link
-                        to="/manage-users"
-                        state={{ committeeName: committee.committeeName }}
+                        to={`/manage-users?committeeId=${id}`}
+                        state={{ committeeId: id, committeeName: committee.committeeName }}
                         className="manage-btn"
                     >
                         Manage Users

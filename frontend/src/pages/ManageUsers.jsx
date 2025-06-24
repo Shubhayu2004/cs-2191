@@ -1,66 +1,75 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '../axios.config';
 import { useAuth } from '../context/useAuth';
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from '../components/Sidebar';
+
 const ManageUsers = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [addEmail, setAddEmail] = useState("");
+    const [addName, setAddName] = useState("");
+    const [addRole, setAddRole] = useState("member");
     const { token } = useAuth();
-    const navigate = useNavigate(); // Initialize navigate function
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Get committeeId from router state or query param
+    const committeeId = location.state?.committeeId || new URLSearchParams(window.location.search).get('committeeId');
+    const committeeName = location.state?.committeeName || "";
 
     useEffect(() => {
-        const fetchUsers = async () => {
+        const fetchCommitteeUsers = async () => {
             try {
-                console.log('Token:', localStorage.getItem('token'));
-                const response = await axiosInstance.get('/users/users');
-                if (response.data && Array.isArray(response.data)) {
-                    setUsers(response.data);
-                } else {
-                    setError('Invalid data received from server');
-                }
+                const response = await axiosInstance.get(`/api/committees/${committeeId}/users`);
+                setUsers(response.data);
             } catch (error) {
-                console.log('Request headers:', error.config?.headers);
-                console.log('Response status:', error.response?.status);
-                console.log('Response data:', error.response?.data);
                 setError(error.response?.data?.message || 'Failed to fetch users');
             } finally {
                 setLoading(false);
             }
         };
-
-        if (token) {
-            fetchUsers();
+        if (token && committeeId) {
+            fetchCommitteeUsers();
         }
-    }, [token]);
+    }, [token, committeeId]);
 
-    const handleRoleChange = async (userId, newRole) => {
+    const handleAddUser = async (e) => {
+        e.preventDefault();
+        if (!addEmail || !addName || !addRole) return;
         try {
-            const response = await axiosInstance.put(`/users/update-role/${userId}`, { 
-                role: newRole 
+            const response = await axiosInstance.post(`/api/committees/${committeeId}/users`, {
+                email: addEmail,
+                name: addName,
+                role: addRole
             });
-
-            if (response.status === 200) {
-                setUsers(users.map(user => 
-                    user._id === userId ? { ...user, status: newRole } : user
-                ));
-                alert('Role updated successfully');
-            }
+            setUsers([...users, response.data]);
+            setAddEmail("");
+            setAddName("");
+            setAddRole("member");
         } catch (error) {
-            console.error('Error updating user role:', error.response?.data || error.message);
-            alert('Failed to update user role');
+            alert(error.response?.data?.message || 'Failed to add user');
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        if (!window.confirm('Remove this user from the committee?')) return;
+        try {
+            await axiosInstance.delete(`/api/committees/${committeeId}/users/${userId}`);
+            setUsers(users.filter(u => u._id !== userId));
+        } catch (error) {
+            alert(error.response?.data?.message || 'Failed to delete user');
         }
     };
 
     const handleGoBack = () => {
-        navigate(-1); // Navigates to the previous page
+        navigate(-1);
     };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
-    if (!users.length) return <div>No users found</div>;
 
     return (
         <div className="manage-users-container">
@@ -68,41 +77,22 @@ const ManageUsers = () => {
                 isOpen={isSidebarOpen} 
                 onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
             />
-            
-            {/* Go Back Button */}
-            <button 
-                onClick={handleGoBack} 
-                className="button-for-manage-users"
-                style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    padding: '10px 20px',
-                    backgroundColor: '#007BFF',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    transition: 'background-color 0.3s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#0056b3'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#007BFF'}
-            >
+            <button onClick={handleGoBack} className="button-for-manage-users" style={{ position: 'absolute', top: '20px', right: '20px', padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px', transition: 'background-color 0.3s ease' }} onMouseEnter={e => e.target.style.backgroundColor = '#0056b3'} onMouseLeave={e => e.target.style.backgroundColor = '#007BFF'}>
                 Go Back
             </button>
-
-
-             {/* Manage Users Heading */}
-             <h1 style={{
-                textAlign: 'center',  // Center the text horizontally
-                marginTop: '30px',    // Add some space above
-                fontSize: '30px',     // Adjust font size if needed
-                fontWeight: 'bold'    // Make the font bold
-            }}>
-                Manage Users
+            <h1 style={{ textAlign: 'center', marginTop: '30px', fontSize: '30px', fontWeight: 'bold' }}>
+                Manage Users for {committeeName}
             </h1>
-            
+            <form onSubmit={handleAddUser} style={{ margin: '20px 0', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
+                <input type="text" placeholder="Name" value={addName} onChange={e => setAddName(e.target.value)} required />
+                <input type="email" placeholder="Email" value={addEmail} onChange={e => setAddEmail(e.target.value)} required />
+                <select value={addRole} onChange={e => setAddRole(e.target.value)} required>
+                    <option value="chairman">Chairman</option>
+                    <option value="convener">Convener</option>
+                    <option value="member">Member</option>
+                </select>
+                <button type="submit">Add User</button>
+            </form>
             <table>
                 <thead>
                     <tr>
@@ -115,19 +105,11 @@ const ManageUsers = () => {
                 <tbody>
                     {users.map(user => (
                         <tr key={user._id}>
-                            <td>{user.fullname?.firstname} {user.fullname?.lastname}</td>
+                            <td>{user.name || user.fullname?.firstname + ' ' + user.fullname?.lastname}</td>
                             <td>{user.email}</td>
-                            <td>{user.status}</td>
+                            <td>{user.role}</td>
                             <td>
-                                <select
-                                    value={user.status}
-                                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                                >
-                                    <option value="member">Member</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="chairman">Chairman</option>
-                                    <option value="convenor">Convenor</option>
-                                </select>
+                                <button onClick={() => handleDeleteUser(user._id)} style={{ background: '#fff', color: '#000', border: '1px solid #000', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
                             </td>
                         </tr>
                     ))}

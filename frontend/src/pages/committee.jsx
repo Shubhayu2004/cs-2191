@@ -21,21 +21,23 @@ const CommitteeApp = () => {
   const { user } = useContext(UserDataContext);
 
   useEffect(() => {
-    fetchCommittees();
+    if (user?._id) {
+      fetchCommitteesForUser(user._id);
+    }
     fetchUsers();
-  }, []);
+  }, [user]);
 
-  const fetchCommittees = async () => {
+  const fetchCommitteesForUser = async (userId) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees`, {
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees/user?userId=${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setCommittees(response.data);
     } catch (error) {
-      console.error("Error fetching committees:", error);
+      console.error("Error fetching committees for user:", error);
     }
   };
 

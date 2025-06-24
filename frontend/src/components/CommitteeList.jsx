@@ -25,7 +25,7 @@ const CommitteeList = ({ committees }) => {
                   <strong>Members:</strong>
                   <ul>
                     {committee.members.map((member, index) => (
-                      <li key={index}>{member.name}</li>
+                      <li key={member.email || index}>{member.name}</li>
                     ))}
                   </ul>
                 </div>

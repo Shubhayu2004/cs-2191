@@ -128,3 +128,93 @@ exports.deleteCommittee = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Get all users in a committee (including chairman and convener)
+exports.getCommitteeUsers = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const committee = await Committee.findById(id);
+        if (!committee) return res.status(404).json({ message: 'Committee not found' });
+        // Compose all users: chairman, convener, and members
+        const users = [
+            { name: committee.chairman.name, email: committee.chairman.email, role: 'chairman', _id: 'chairman' },
+            { name: committee.convener.name, email: committee.convener.email, role: 'convener', _id: 'convener' },
+            ...committee.members.map(m => ({ ...m.toObject(), role: m.role || 'member' }))
+        ];
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Add a user to a committee
+exports.addUserToCommittee = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email, name, role } = req.body;
+        if (!email || !name || !role) return res.status(400).json({ message: 'Missing fields' });
+        const committee = await Committee.findById(id);
+        if (!committee) return res.status(404).json({ message: 'Committee not found' });
+        // Prevent duplicate
+        if (committee.members.some(m => m.email === email)) {
+            return res.status(400).json({ message: 'User already in committee' });
+        }
+        const newMember = { name, email, role };
+        committee.members.push(newMember);
+        await committee.save();
+        res.status(201).json(newMember);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Remove a user from a committee
+exports.removeUserFromCommittee = async (req, res) => {
+    try {
+        const { id, userId } = req.params;
+        const committee = await Committee.findById(id);
+        if (!committee) return res.status(404).json({ message: 'Committee not found' });
+        if (userId === 'chairman') {
+            committee.chairman = { name: 'Removed', email: 'Removed' };
+            await committee.save();
+            return res.json({ message: 'Chairman removed from committee' });
+        }
+        if (userId === 'convener') {
+            committee.convener = { name: 'Removed', email: 'Removed' };
+            await committee.save();
+            return res.json({ message: 'Convener removed from committee' });
+        }
+        const before = committee.members.length;
+        committee.members = committee.members.filter(m => m._id.toString() !== userId);
+        if (committee.members.length === before) {
+            return res.status(404).json({ message: 'User not found in committee' });
+        }
+        await committee.save();
+        res.json({ message: 'User removed from committee' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// Get all committees for a user (by userId)
+exports.getCommitteesForUser = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        console.log('getCommitteesForUser: received userId:', userId, 'type:', typeof userId);
+        if (!userId) return res.status(400).json({ message: 'userId is required' });
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'userId is not a valid ObjectId', received: userId });
+        }
+        const objectId = mongoose.Types.ObjectId(userId);
+        const committees = await Committee.find({
+            $or: [
+                { 'chairman.userId': objectId },
+                { 'convener.userId': objectId },
+                { 'members.userId': objectId }
+            ]
+        });
+        res.status(200).json(committees);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
