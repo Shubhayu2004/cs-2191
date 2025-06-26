@@ -11,7 +11,7 @@ function LoginPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const { setUser } = useContext(UserDataContext);
+  const { setUser, setToken } = useContext(UserDataContext);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -34,6 +34,7 @@ function LoginPage() {
         const data = response.data;
 
         setUser(data.user);
+        setToken && setToken(data.token); // Ensure token is set in context
         localStorage.setItem('token', data.token);
 
         setSuccessMessage('Login successful! Redirecting...');

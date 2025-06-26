@@ -21,13 +21,20 @@ const CommitteeApp = () => {
   const { user } = useContext(UserDataContext);
 
   useEffect(() => {
-    if (user?._id) {
+    if (user && typeof user._id === 'string' && user._id.length === 24) {
       fetchCommitteesForUser(user._id);
+    } else {
+      setCommittees([]);
     }
     fetchUsers();
   }, [user]);
 
   const fetchCommitteesForUser = async (userId) => {
+    if (!userId || typeof userId !== 'string' || userId.length !== 24) {
+      console.error('Invalid userId for fetching committees:', userId);
+      setCommittees([]);
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees/user?userId=${userId}`, {
@@ -38,6 +45,7 @@ const CommitteeApp = () => {
       setCommittees(response.data);
     } catch (error) {
       console.error("Error fetching committees for user:", error);
+      setCommittees([]);
     }
   };
 
@@ -71,26 +79,43 @@ const CommitteeApp = () => {
             throw new Error('Please fill all required fields');
         }
 
-        const token = localStorage.getItem("token");
-        const response = await axios.post(
-            `${import.meta.env.VITE_BASE_URL}/api/committees/create`,
-            {
-                committeeName: formData.committeeName,
-                committeePurpose: formData.committeePurpose,
-                chairman: {
-                    name: formData.chairman.name,
-                    email: formData.chairman.email,
-                },
-                convener: {
-                    name: formData.convener.name,
-                    email: formData.convener.email,
-                },
-                members: formData.members.map(member => ({
+        // Find userId for chairman and convener
+        const chairmanUser = users.find(u => u.email === formData.chairman.email);
+        const convenerUser = users.find(u => u.email === formData.convener.email);
+        if (!chairmanUser || !convenerUser) {
+            throw new Error('Chairman or Convener user not found');
+        }
+
+        // Log the payload for debugging
+        const payload = {
+            committeeName: formData.committeeName,
+            committeePurpose: formData.committeePurpose,
+            chairman: {
+                userId: chairmanUser._id,
+                name: formData.chairman.name,
+                email: formData.chairman.email,
+            },
+            convener: {
+                userId: convenerUser._id,
+                name: formData.convener.name,
+                email: formData.convener.email,
+            },
+            members: formData.members.map(member => {
+                const memberUser = users.find(u => u.email === member.email);
+                return {
+                    userId: memberUser ? memberUser._id : undefined,
                     name: member.name,
                     email: member.email,
                     role: member.role || 'member'
-                }))
-            },
+                };
+            })
+        };
+        console.log('Committee creation payload:', payload);
+
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+            `${import.meta.env.VITE_BASE_URL}/api/committees/create`,
+            payload,
             {
                 headers: { 
                     'Authorization': `Bearer ${token}`,

@@ -55,8 +55,12 @@ module.exports.loginUser = async (req, res, next) => {
     res.status(200).json({ token, user });
 }
 module.exports.getUserProfile = async (req, res, next) => {
-
-    res.status(200).json(req.user);
+    // Remove status for non-admins
+    const user = req.user.toObject ? req.user.toObject() : req.user;
+    if (user.status !== 'admin') {
+        delete user.status;
+    }
+    res.status(200).json(user);
 
 }
 module.exports.logoutUser = async (req, res, next) => {
@@ -78,7 +82,11 @@ module.exports.updateUserRole = async (req, res) => {
             return res.status(404).json({ message: 'User not found.' });
         }
 
-        user.status = role;
+        if (role === 'admin') {
+            user.status = 'admin';
+        } else {
+            user.status = undefined;
+        }
         await user.save();
 
         return res.status(200).json({ 
@@ -98,7 +106,15 @@ module.exports.updateUserRole = async (req, res) => {
 module.exports.getAllUsers = async (req, res) => {
     try {
         const users = await userModel.find().select('-password');
-        return res.status(200).json(users);
+        // Remove status for all users except admin
+        const usersSanitized = users.map(u => {
+            const userObj = u.toObject();
+            if (userObj.status !== 'admin') {
+                delete userObj.status;
+            }
+            return userObj;
+        });
+        return res.status(200).json(usersSanitized);
     } catch (err) {
         console.error('Get users error:', err);
         return res.status(500).json({ message: 'Server error.' });

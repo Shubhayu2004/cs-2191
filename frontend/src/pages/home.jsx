@@ -120,9 +120,11 @@ const Home = () => {
               <p>
                 <i className="fas fa-envelope"></i> User ID: {user?.email || 'N/A'}
               </p>
-              <p>
-                <i className="fas fa-envelope"></i> Status: {user?.status || 'N/A'}
-              </p>
+              {user?.status === 'admin' && (
+                <p>
+                  <i className="fas fa-envelope"></i> Status: {user.status}
+                </p>
+              )}
             </div>
 
             {/* Notifications Section */}

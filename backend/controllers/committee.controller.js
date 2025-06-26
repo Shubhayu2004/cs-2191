@@ -16,18 +16,31 @@ exports.createCommittee = async (req, res) => {
             });
         }
 
+        // Ensure userId is present for chairman, convener, and all members
+        if (!chairman.userId || !convener.userId || members.some(m => !m.userId)) {
+            return res.status(400).json({
+                message: 'userId is required for chairman, convener, and all members',
+                chairmanUserId: chairman.userId,
+                convenerUserId: convener.userId,
+                memberUserIds: members.map(m => m.userId)
+            });
+        }
+
         const committee = new Committee({
             committeeName, 
             committeePurpose, 
             chairman: {
+                userId: chairman.userId,
                 name: chairman.name,
                 email: chairman.email
             }, 
             convener: {
+                userId: convener.userId,
                 name: convener.name,
                 email: convener.email
             }, 
             members: members.map(member => ({
+                userId: member.userId,
                 name: member.name,
                 email: member.email,
                 role: member.role || 'member'
@@ -205,7 +218,8 @@ exports.getCommitteesForUser = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: 'userId is not a valid ObjectId', received: userId });
         }
-        const objectId = mongoose.Types.ObjectId(userId);
+        const objectId = new mongoose.Types.ObjectId(userId); // FIXED: use 'new' keyword
+        console.log('Querying committees for userId:', objectId);
         const committees = await Committee.find({
             $or: [
                 { 'chairman.userId': objectId },
@@ -215,6 +229,7 @@ exports.getCommitteesForUser = async (req, res) => {
         });
         res.status(200).json(committees);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error in getCommitteesForUser:', error.stack || error);
+        res.status(500).json({ message: error.message, stack: error.stack });
     }
 };
