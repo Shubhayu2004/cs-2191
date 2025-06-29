@@ -176,11 +176,32 @@ function CommitteeDashboard() {
     try {
         const token = localStorage.getItem('token');
         const meeting = recentMeetings[selectedMeetingIndex];
-
+        // Validate and format date/time
+        const formattedDate = meeting.date ? new Date(meeting.date).toISOString().slice(0, 10) : '';
+        let formattedTime = meeting.time;
+        if (formattedTime && formattedTime.length === 5 && formattedTime[2] === ':') {
+            // already in HH:mm
+        } else if (formattedTime && formattedTime.match(/\d{1,2}:\d{2}\s?(AM|PM)/i)) {
+            // Convert 12-hour to 24-hour
+            const [time, period] = formattedTime.split(/\s/);
+            let [hours, minutes] = time.split(":");
+            hours = parseInt(hours, 10);
+            if (/PM/i.test(period) && hours < 12) hours += 12;
+            if (/AM/i.test(period) && hours === 12) hours = 0;
+            formattedTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
+        }
+        if (!meeting.topic || !formattedDate || !formattedTime || !editedMinutes.trim()) {
+            alert("All fields (topic, date, time, minutes) are required.");
+            return;
+        }
         await axios.put(
             `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}`,
             {
-                minutesText: editedMinutes
+                topic: meeting.topic,
+                date: formattedDate,
+                time: formattedTime,
+                minutesText: editedMinutes,
+                committeeId: meeting.committeeId || committee._id || id
             },
             {
                 headers: {
@@ -189,12 +210,12 @@ function CommitteeDashboard() {
                 }
             }
         );
-
         await fetchMinutes();
         setShowMinutes(false);
         setSelectedMeetingIndex(null);
-    } catch {
-        setError('Failed to save minutes');
+    } catch (err) {
+        setError('Failed to save minutes: ' + (err.response?.data?.message || err.message));
+        alert('Failed to save minutes: ' + (err.response?.data?.message || err.message));
     }
 };
 
@@ -462,7 +483,6 @@ function CommitteeDashboard() {
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Minutes</th>
-                                {isConvener && <th>Edit</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -490,15 +510,10 @@ function CommitteeDashboard() {
                                                 View Minutes
                                             </button>
                                         </td>
-                                        {isConvener && (
-                                            <td>
-                                                <button onClick={() => handleViewMinutes(meeting.minutesText, index)} className="edit-mom-btn">Edit</button>
-                                            </td>
-                                        )}
                                     </tr>
                                     {suggestionBoxIndex === index && isMember && meeting._id && (
                                         <tr>
-                                            <td colSpan={isConvener ? 6 : 5}>
+                                            <td colSpan={5}>
                                                 <textarea
                                                     style={{ width: '100%', height: '80px', marginTop: '10px' }}
                                                     placeholder="Enter your suggestion here..."

@@ -26,7 +26,7 @@ const ScheduledMeetingsCalendar = () => {
             try {
                 const token = localStorage.getItem("token");
                 const response = await axios.get(
-                    `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${committeeId}`,
+                    `${import.meta.env.VITE_BASE_URL}/api/meetings/committee/${committeeId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

@@ -38,13 +38,12 @@ const ScheduleMeeting = () => {
             try {
                 const token = localStorage.getItem('token');
                 await axios.post(
-                    `${import.meta.env.VITE_BASE_URL}/api/minutes/create`,
+                    `${import.meta.env.VITE_BASE_URL}/api/meetings/schedule`,
                     {
                         committeeId,
                         topic: title,
                         date,
-                        time: startTime,
-                        minutesText: description || 'No minutes yet',
+                        time: startTime
                     },
                     {
                         headers: {
@@ -117,9 +116,6 @@ const ScheduleMeeting = () => {
             <button className={styles.btnForMeeting} onClick={toggleScheduleMeetingVisibility}>
                 Schedule A Meeting
             </button>
-            <a href="/scheduleCalendar" className={styles.btnForMeeting}>
-                View Schedule
-            </a>
             {scheduleMeetingVisibility && (
                 <section className={styles.scheduleMeetingForm}>
                     <form onSubmit={handleFormSubmit}>

@@ -60,7 +60,10 @@ const updateMinutes = async (req, res) => {
             lastEditedBy: req.user._id,
             lastEditedAt: new Date()
         };
-
+        // Ensure date is a Date object if present
+        if (update.date) {
+            update.date = new Date(update.date);
+        }
         const minutes = await MinutesOfMeeting.findByIdAndUpdate(
             id,
             update,

@@ -9,6 +9,7 @@ const userRoutes = require('./routes/user.routes');
 const committeeRoutes = require('./routes/committee.routes'); // Fix import path
 const minutesRoutes = require('./routes/minutes.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const meetingRoutes = require('./routes/meeting.routes');
 
 
 connectTodb();
@@ -27,6 +28,7 @@ app.use('/users', userRoutes);
 app.use('/api/committees', committeeRoutes);
 app.use('/api/minutes', minutesRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/meetings', meetingRoutes);
 
 
 app.get('/' , (req,res) => {
