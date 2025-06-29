@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const { body } = require("express-validator")
@@ -33,5 +32,16 @@ router.put('/update-role/:id', authMiddleware.authUser, authMiddleware.isAdmin, 
 router.get('/users', [authMiddleware.authUser, authMiddleware.isAdmin], userController.getAllUsers);
 
 router.get('/username', authMiddleware.authUser, userController.getUserNames);
+
+// Get user by email (for committee add)
+router.get('/by-email/:email', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 module.exports = router;

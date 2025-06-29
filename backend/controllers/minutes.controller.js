@@ -147,6 +147,28 @@ const deleteSuggestion = async (req, res) => {
     }
 };
 
+// Get all suggestions for all MoMs of a committee, grouped by MoM
+const getAllSuggestionsByCommittee = async (req, res) => {
+    try {
+        const { committeeId } = req.params;
+        // Get all MoMs for this committee
+        const moms = await MinutesOfMeeting.find({ committeeId });
+        const momIds = moms.map(m => m._id);
+        // Get all suggestions for these MoMs
+        const suggestions = await Suggestion.find({ meetingId: { $in: momIds } })
+            .populate('userId', 'fullname email')
+            .sort({ createdAt: -1 });
+        // Group suggestions by MoM
+        const grouped = moms.map(mom => ({
+            mom,
+            suggestions: suggestions.filter(s => s.meetingId.toString() === mom._id.toString())
+        }));
+        res.status(200).json(grouped);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Add this function to send notifications to users
 async function sendNotification(userIds, message, link = null) {
     console.log('sendNotification: function called');
@@ -169,5 +191,6 @@ module.exports = {
     addSuggestion,
     getSuggestionsByMeeting,
     deleteSuggestion,
-    sendNotification
+    sendNotification,
+    getAllSuggestionsByCommittee
 };

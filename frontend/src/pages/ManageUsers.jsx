@@ -68,7 +68,15 @@ const ManageUsers = () => {
         e.preventDefault();
         if (!addEmail || !addName || !addRole) return;
         try {
+            // Fetch userId by email
+            const userRes = await axiosInstance.get(`/api/users/by-email/${encodeURIComponent(addEmail)}`);
+            const userId = userRes.data?._id;
+            if (!userId) {
+                alert('No user found with this email.');
+                return;
+            }
             const response = await axiosInstance.post(`/api/committees/${committeeId}/users`, {
+                userId,
                 email: addEmail,
                 name: addName,
                 role: addRole

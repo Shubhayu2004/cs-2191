@@ -14,5 +14,7 @@ router.put('/:id', requireCommitteeRole('convener'), minutesController.updateMin
 router.delete('/:id', minutesController.deleteMinutes);
 router.post('/:meetingId/suggestions', minutesController.addSuggestion);
 router.get('/:meetingId/suggestions', minutesController.getSuggestionsByMeeting);
+// Get all suggestions for all MoMs of a committee, grouped by MoM
+router.get('/committee/:committeeId/suggestions', minutesController.getAllSuggestionsByCommittee);
 
 module.exports = router;

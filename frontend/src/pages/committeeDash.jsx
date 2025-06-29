@@ -375,6 +375,35 @@ function CommitteeDashboard() {
         }
     };
 
+    // For convener: suggestions grouped by MoM
+    const [momSuggestions, setMomSuggestions] = useState([]);
+
+    useEffect(() => {
+        if (isConvener && showRecentMeetings) {
+            const fetchSuggestions = async () => {
+                setLoadingSuggestions(true);
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.get(
+                        `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}/suggestions`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        }
+                    );
+                    setMomSuggestions(res.data || []);
+                } catch {
+                    setMomSuggestions([]);
+                } finally {
+                    setLoadingSuggestions(false);
+                }
+            };
+            fetchSuggestions();
+        }
+    }, [isConvener, showRecentMeetings, id]);
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">Error: {error}</div>;
     if (!committee) return <div>No committee found</div>;
@@ -512,6 +541,31 @@ function CommitteeDashboard() {
                                             </button>
                                         </td>
                                     </tr>
+                                    {/* For convener: show suggestions for this MoM */}
+                                    {isConvener && momSuggestions.length > 0 && meeting._id && (
+                                        <tr>
+                                            <td colSpan={5}>
+                                                <div style={{ background: '#f6faff', border: '1px solid #b3e0ff', padding: '8px', margin: '8px 0' }}>
+                                                    <strong>Suggestions for this MoM:</strong>
+                                                    {loadingSuggestions ? (
+                                                        <div>Loading suggestions...</div>
+                                                    ) : (
+                                                        <ul style={{ margin: 0, paddingLeft: 16 }}>
+                                                            {(momSuggestions.find(m => m.mom._id === meeting._id)?.suggestions || []).length === 0 ? (
+                                                                <li>No suggestions.</li>
+                                                            ) : (
+                                                                momSuggestions.find(m => m.mom._id === meeting._id).suggestions.map((s, idx) => (
+                                                                    <li key={s._id || idx}>
+                                                                        <b>{s.userId?.fullname?.firstname || s.userId?.email || 'Unknown'}:</b> {s.suggestion}
+                                                                    </li>
+                                                                ))
+                                                            )}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                     {suggestionBoxIndex === index && isMember && meeting._id && (
                                         <tr>
                                             <td colSpan={5}>

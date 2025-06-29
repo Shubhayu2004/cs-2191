@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/sidebar.css";
 
-
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
 

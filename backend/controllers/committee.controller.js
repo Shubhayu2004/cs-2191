@@ -164,15 +164,15 @@ exports.getCommitteeUsers = async (req, res) => {
 exports.addUserToCommittee = async (req, res) => {
     try {
         const { id } = req.params;
-        const { email, name, role } = req.body;
-        if (!email || !name || !role) return res.status(400).json({ message: 'Missing fields' });
+        const { userId, email, name, role } = req.body;
+        if (!userId || !email || !name || !role) return res.status(400).json({ message: 'Missing fields (userId, email, name, role required)' });
         const committee = await Committee.findById(id);
         if (!committee) return res.status(404).json({ message: 'Committee not found' });
         // Prevent duplicate
         if (committee.members.some(m => m.email === email)) {
             return res.status(400).json({ message: 'User already in committee' });
         }
-        const newMember = { name, email, role };
+        const newMember = { userId, name, email, role };
         committee.members.push(newMember);
         await committee.save();
         res.status(201).json(newMember);
