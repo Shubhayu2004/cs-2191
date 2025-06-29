@@ -275,7 +275,8 @@ function CommitteeDashboard() {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    data: { committeeId: id }
                 }
             );
             alert('Committee dissolved successfully.');
@@ -283,7 +284,7 @@ function CommitteeDashboard() {
         } catch (err) {
             console.error('Error dissolving committee:', err);
             setError(err.response?.data?.message || 'Error dissolving committee');
-            alert('Failed to dissolve committee');
+            alert('Failed to dissolve committee: ' + (err.response?.data?.message || err.message));
         }
     };
 
