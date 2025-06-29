@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useState, useEffect } from "react";
 import styles from "../styles/welcomePage.module.css";
@@ -10,10 +9,10 @@ function Landing() {
   return (
     <div className={styles.landing}>
       <div className={styles.left}>
-        <h2 className={styles.name}>MeetSync</h2>
+        <h2 className={styles.name}>AutoMeet</h2>
 
         <div className={styles.description}>
-          <div className={styles.welcome}>Welcome to  <span className={styles.name2}>MeetSync <br /></span></div>
+          <div className={styles.welcome}>Welcome to  <span className={styles.name2}>AutoMeet <br /></span></div>
 
           <div>Dynamic Meeting Management Workspace</div>
           <div className={styles.slogan}>Organize ● Sync ● Excel</div>

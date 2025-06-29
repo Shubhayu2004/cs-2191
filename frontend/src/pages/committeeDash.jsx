@@ -34,9 +34,13 @@ function CommitteeDashboard() {
     // Determine the user's role for this committee
     let userCommitteeRole = null;
     if (committee && user?.email) {
-        if (committee.members && Array.isArray(committee.members)) {
+        if (committee.chairman && committee.chairman.email === user.email) {
+            userCommitteeRole = "chairman";
+        } else if (committee.convener && committee.convener.email === user.email) {
+            userCommitteeRole = "convener";
+        } else if (committee.members && Array.isArray(committee.members)) {
             const found = committee.members.find(m => m.email === user.email);
-            if (found) userCommitteeRole = found.role;
+            if (found) userCommitteeRole = found.role || "member";
         }
     }
 
@@ -49,7 +53,7 @@ function CommitteeDashboard() {
     // Admin can always see Manage Users, but other actions are per-committee role
     const canEditMinutes = isConvener;
     const canScheduleMeetings = isConvener;
-    const canManageUsers = isAdmin || isChairman;
+    const canManageUsers = isAdmin ;
     const [newMinutesText, setNewMinutesText] = useState("");
     const [showCreateMoM, setShowCreateMoM] = useState(false);
     const [newMoMTopic, setNewMoMTopic] = useState("");
@@ -339,6 +343,16 @@ function CommitteeDashboard() {
         }
     };
 
+    const handleEditMoM = (meeting) => {
+        // Find the index of the meeting in recentMeetings
+        const index = recentMeetings.findIndex(m => m._id === meeting._id);
+        if (index !== -1) {
+            setSelectedMeetingIndex(index);
+            setEditedMinutes(meeting.minutesText);
+            setShowMinutes(true);
+        }
+    };
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">Error: {error}</div>;
     if (!committee) return <div>No committee found</div>;
@@ -372,7 +386,6 @@ function CommitteeDashboard() {
             </div>
 
             <div className="utility">
-
                 {canManageUsers && (
                     <Link
                         to={`/manage-users?committeeId=${id}`}
@@ -381,21 +394,6 @@ function CommitteeDashboard() {
                     >
                         Manage Users
                     </Link>
-                )}
-
-                {canScheduleMeetings && (
-                    <Link
-                        to="/scheduleMeeting"
-                        state={{ committeeId: id }}
-                        className="schedule-btn"
-                    >
-                        Schedule Meeting
-                    </Link>
-                )}
-                {isConvener && (
-                    <button className="upcoming-btn" onClick={handleViewSuggestions}>
-                        {showSuggestions ? 'Hide Suggestions' : 'View Suggestions'}
-                    </button>
                 )}
                 <a
                     href={`/scheduleCalendar?committeeId=${id}`}
@@ -406,14 +404,22 @@ function CommitteeDashboard() {
                 <button className="upcoming-btn" onClick={handleToggleRecentMeetings}>
                     {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
                 </button>
+                {canScheduleMeetings && (
+                    <Link
+                        to={`/scheduleMeeting`}
+                        state={{ committeeId: id, committeeName: committee.committeeName }}
+                        className="upcoming-btn"
+                    >
+                        Schedule Meeting
+                    </Link>
+                )}
                 {isConvener && (
                     <button className="create-mom-btn" onClick={() => setShowCreateMoM(true)}>
                         Create New MoM
                     </button>
                 )}
-
                 {/* Dissolve Committee button for chairman only */}
-                {user?.status === "chairman" && (
+                {isChairman && (
                     <button onClick={handleDissolveCommittee} className="dissolve-btn" style={{backgroundColor: 'red', color: 'white'}}>
                         Dissolve Committee
                     </button>
@@ -456,6 +462,7 @@ function CommitteeDashboard() {
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Minutes</th>
+                                {isConvener && <th>Edit</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -483,10 +490,15 @@ function CommitteeDashboard() {
                                                 View Minutes
                                             </button>
                                         </td>
+                                        {isConvener && (
+                                            <td>
+                                                <button onClick={() => handleViewMinutes(meeting.minutesText, index)} className="edit-mom-btn">Edit</button>
+                                            </td>
+                                        )}
                                     </tr>
                                     {suggestionBoxIndex === index && isMember && meeting._id && (
                                         <tr>
-                                            <td colSpan="5">
+                                            <td colSpan={isConvener ? 6 : 5}>
                                                 <textarea
                                                     style={{ width: '100%', height: '80px', marginTop: '10px' }}
                                                     placeholder="Enter your suggestion here..."

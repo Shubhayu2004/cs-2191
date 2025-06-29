@@ -26,7 +26,10 @@ const CommitteeApp = () => {
     } else {
       setCommittees([]);
     }
-    fetchUsers();
+    // Only fetch users if admin
+    if (user?.status === 'admin') {
+      fetchUsers();
+    }
   }, [user]);
 
   const fetchCommitteesForUser = async (userId) => {

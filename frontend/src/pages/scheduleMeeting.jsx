@@ -1,8 +1,9 @@
 import styles from "../styles/scheduleMeeting.module.css";
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import Sidebar from '../components/Sidebar';
 import { useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { UserDataContext } from '../context/UserDataContext';
 
 const ScheduleMeeting = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -15,6 +16,9 @@ const ScheduleMeeting = () => {
     });
     const location = useLocation();
     const params = useParams();
+    const { user } = useContext(UserDataContext);
+    const [committee, setCommittee] = useState(null);
+    const [loading, setLoading] = useState(true);
     // Try to get committeeId from route state, fallback to useParams
     const committeeId = location.state?.committeeId || params.id;
 
@@ -65,6 +69,43 @@ const ScheduleMeeting = () => {
             alert('Please fill in all required fields');
         }
     };
+
+    // Fetch committee data to check role
+    useEffect(() => {
+        async function fetchCommittee() {
+            if (!committeeId) return;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/api/committees/${committeeId}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setCommittee(response.data);
+            } catch {
+                setCommittee(null);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchCommittee();
+    }, [committeeId]);
+
+    // Determine the user's role for this committee
+    let userCommitteeRole = null;
+    if (committee && user?.email) {
+        if (committee.chairman && committee.chairman.email === user.email) {
+            userCommitteeRole = "chairman";
+        } else if (committee.convener && committee.convener.email === user.email) {
+            userCommitteeRole = "convener";
+        } else if (committee.members && Array.isArray(committee.members)) {
+            const found = committee.members.find(m => m.email === user.email);
+            if (found) userCommitteeRole = found.role || "member";
+        }
+    }
+    const isConvener = userCommitteeRole === "convener";
+
+    if (loading) return <div>Loading...</div>;
+    if (!isConvener) return <div>You do not have permission to schedule meetings for this committee.</div>;
 
     return (
         <div className={styles.scheduleMeetingContainer}>

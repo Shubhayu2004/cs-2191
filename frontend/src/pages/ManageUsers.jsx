@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import axiosInstance from '../axios.config';
 import { useAuth } from '../context/useAuth';
 import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from '../components/Sidebar';
+import { UserDataContext } from '../context/UserDataContext';
 
 const ManageUsers = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,12 +14,39 @@ const ManageUsers = () => {
     const [addName, setAddName] = useState("");
     const [addRole, setAddRole] = useState("member");
     const { token } = useAuth();
+    const { user } = useContext(UserDataContext);
     const navigate = useNavigate();
     const location = useLocation();
 
     // Get committeeId from router state or query param
     const committeeId = location.state?.committeeId || new URLSearchParams(window.location.search).get('committeeId');
     const committeeName = location.state?.committeeName || "";
+    const [committee, setCommittee] = useState(null);
+    const [roleLoading, setRoleLoading] = useState(true);
+    let userCommitteeRole = null;
+    const isAdmin = user?.status === "admin";
+
+    // Fetch committee data to determine user's role in this committee
+    useEffect(() => {
+        async function fetchCommittee() {
+            if (!committeeId) return;
+            try {
+                await axiosInstance.get(`/api/committees/${committeeId}`).then(response => setCommittee(response.data));
+            } catch {
+                setCommittee(null);
+            } finally {
+                setRoleLoading(false);
+            }
+        }
+        fetchCommittee();
+    }, [committeeId]);
+
+    if (committee && user?.email) {
+        if (committee.convener?.email === user.email) userCommitteeRole = "convener";
+        else if (committee.members?.some(m => m.email === user.email && m.role === "member")) userCommitteeRole = "member";
+    }
+    // Only admin can manage users
+    const canManageUsers = isAdmin;
 
     useEffect(() => {
         const fetchCommitteeUsers = async () => {
@@ -68,7 +96,8 @@ const ManageUsers = () => {
         navigate(-1);
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading || roleLoading) return <div>Loading...</div>;
+    if (!canManageUsers) return <div>You do not have permission to manage users for this committee.</div>;
     if (error) return <div>Error: {error}</div>;
 
     return (

@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import "../styles/committeeList.css";
+import { UserDataContext } from '../context/UserDataContext';
 
 const CommitteeList = ({ committees }) => {
+  const { user } = useContext(UserDataContext);
   return (
     <div className="committee-list">
       <h2>Existing Committees</h2>
@@ -29,6 +31,7 @@ const CommitteeList = ({ committees }) => {
                     ))}
                   </ul>
                 </div>
+                {/* All role-based actions are now in the dashboard, not here */}
               </div>
             </Link>
           ))}
