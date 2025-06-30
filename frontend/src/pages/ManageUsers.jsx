@@ -66,27 +66,31 @@ const ManageUsers = () => {
 
     const handleAddUser = async (e) => {
         e.preventDefault();
-        if (!addEmail || !addName || !addRole) return;
+        if (!addEmail || !addName) return;
         try {
             // Fetch userId by email
             const userRes = await axiosInstance.get(`/api/users/by-email/${encodeURIComponent(addEmail)}`);
             const userId = userRes.data?._id;
             if (!userId) {
-                alert('No user found with this email.');
+                alert('No user found with this email. Please ensure the user is registered.');
                 return;
             }
             const response = await axiosInstance.post(`/api/committees/${committeeId}/users`, {
                 userId,
                 email: addEmail,
                 name: addName,
-                role: addRole
+                role: 'member'
             });
             setUsers([...users, response.data]);
             setAddEmail("");
             setAddName("");
             setAddRole("member");
         } catch (error) {
-            alert(error.response?.data?.message || 'Failed to add user');
+            if (error.response?.status === 404) {
+                alert('No user found with this email. Please ensure the user is registered.');
+            } else {
+                alert(error.response?.data?.message || 'Failed to add user');
+            }
         }
     };
 
@@ -123,9 +127,7 @@ const ManageUsers = () => {
             <form onSubmit={handleAddUser} style={{ margin: '20px 0', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
                 <input type="text" placeholder="Name" value={addName} onChange={e => setAddName(e.target.value)} required />
                 <input type="email" placeholder="Email" value={addEmail} onChange={e => setAddEmail(e.target.value)} required />
-                <select value={addRole} onChange={e => setAddRole(e.target.value)} required>
-                    <option value="chairman">Chairman</option>
-                    <option value="convener">Convener</option>
+                <select value={addRole} onChange={e => setAddRole(e.target.value)} required disabled>
                     <option value="member">Member</option>
                 </select>
                 <button type="submit">Add User</button>
@@ -146,7 +148,9 @@ const ManageUsers = () => {
                             <td>{user.email}</td>
                             <td>{user.role}</td>
                             <td>
-                                <button onClick={() => handleDeleteUser(user._id)} style={{ background: '#fff', color: '#000', border: '1px solid #000', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                                {user.role === 'member' && (
+                                    <button onClick={() => handleDeleteUser(user._id)} style={{ background: '#fff', color: '#000', border: '1px solid #000', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                                )}
                             </td>
                         </tr>
                     ))}

@@ -36,7 +36,9 @@ router.get('/username', authMiddleware.authUser, userController.getUserNames);
 // Get user by email (for committee add)
 router.get('/by-email/:email', async (req, res) => {
     try {
-        const user = await User.findOne({ email: req.params.email });
+        const email = req.params.email.trim();
+        // Use case-insensitive regex for robust search
+        const user = await User.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
     } catch (err) {
