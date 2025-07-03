@@ -16,4 +16,18 @@ axiosInstance.interceptors.request.use((config) => {
     return config;
 });
 
+// Add a response interceptor to handle expired tokens
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Token expired or unauthorized
+            localStorage.removeItem('token');
+            // Optionally, clear user context if available
+            window.location.href = '/user/logout'; // Redirect to logout or login page
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default axiosInstance;

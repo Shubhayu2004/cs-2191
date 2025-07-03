@@ -20,37 +20,40 @@ const CommitteeApp = () => {
   const [users, setUsers] = useState([]);
   const { user } = useContext(UserDataContext);
 
+
   useEffect(() => {
-    if (user && typeof user._id === 'string' && user._id.length === 24) {
-      fetchCommitteesForUser(user._id);
-    } else {
-      setCommittees([]);
+    const fetchCommittees = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        let response;
+        if (user?.status === 'admin') {
+          // Admin: fetch all committees
+          response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else if (user && typeof user._id === 'string' && user._id.length === 24) {
+          // Non-admin: fetch only their committees
+          response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees/user?userId=${user._id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          setCommittees([]);
+          return;
+        }
+        setCommittees(response.data);
+      } catch (error) {
+        console.error("Error fetching committees:", error);
+        setCommittees([]);
+      }
+    };
+    if (user) {
+      fetchCommittees();
     }
     // Only fetch users if admin
     if (user?.status === 'admin') {
       fetchUsers();
     }
   }, [user]);
-
-  const fetchCommitteesForUser = async (userId) => {
-    if (!userId || typeof userId !== 'string' || userId.length !== 24) {
-      console.error('Invalid userId for fetching committees:', userId);
-      setCommittees([]);
-      return;
-    }
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees/user?userId=${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setCommittees(response.data);
-    } catch (error) {
-      console.error("Error fetching committees for user:", error);
-      setCommittees([]);
-    }
-  };
 
   const fetchUsers = async () => {
     try {

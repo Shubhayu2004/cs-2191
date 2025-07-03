@@ -21,9 +21,7 @@ const ManageUsers = () => {
     // Get committeeId from router state or query param
     const committeeId = location.state?.committeeId || new URLSearchParams(window.location.search).get('committeeId');
     const committeeName = location.state?.committeeName || "";
-    const [committee, setCommittee] = useState(null);
     const [roleLoading, setRoleLoading] = useState(true);
-    let userCommitteeRole = null;
     const isAdmin = user?.status === "admin";
 
     // Fetch committee data to determine user's role in this committee
@@ -31,9 +29,9 @@ const ManageUsers = () => {
         async function fetchCommittee() {
             if (!committeeId) return;
             try {
-                await axiosInstance.get(`/api/committees/${committeeId}`).then(response => setCommittee(response.data));
+                await axiosInstance.get(`/api/committees/${committeeId}`);
             } catch {
-                setCommittee(null);
+                // Do nothing
             } finally {
                 setRoleLoading(false);
             }
@@ -41,10 +39,6 @@ const ManageUsers = () => {
         fetchCommittee();
     }, [committeeId]);
 
-    if (committee && user?.email) {
-        if (committee.convener?.email === user.email) userCommitteeRole = "convener";
-        else if (committee.members?.some(m => m.email === user.email && m.role === "member")) userCommitteeRole = "member";
-    }
     // Only admin can manage users
     const canManageUsers = isAdmin;
 
@@ -69,19 +63,21 @@ const ManageUsers = () => {
         if (!addEmail || !addName) return;
         try {
             // Fetch userId by email
-            const userRes = await axiosInstance.get(`/api/users/by-email/${encodeURIComponent(addEmail)}`);
+            const userRes = await axiosInstance.get(`/users/by-email/${encodeURIComponent(addEmail)}`);
             const userId = userRes.data?._id;
             if (!userId) {
                 alert('No user found with this email. Please ensure the user is registered.');
                 return;
             }
-            const response = await axiosInstance.post(`/api/committees/${committeeId}/users`, {
+            await axiosInstance.post(`/api/committees/${committeeId}/users`, {
                 userId,
                 email: addEmail,
                 name: addName,
                 role: 'member'
             });
-            setUsers([...users, response.data]);
+            // Refetch users after adding
+            const refreshed = await axiosInstance.get(`/api/committees/${committeeId}/users`);
+            setUsers(refreshed.data);
             setAddEmail("");
             setAddName("");
             setAddRole("member");
@@ -96,9 +92,15 @@ const ManageUsers = () => {
 
     const handleDeleteUser = async (userId) => {
         if (!window.confirm('Remove this user from the committee?')) return;
+        if (!userId) {
+            alert('User ID not found. Cannot delete this user.');
+            return;
+        }
         try {
             await axiosInstance.delete(`/api/committees/${committeeId}/users/${userId}`);
-            setUsers(users.filter(u => u._id !== userId));
+            // Refetch users after delete
+            const refreshed = await axiosInstance.get(`/api/committees/${committeeId}/users`);
+            setUsers(refreshed.data);
         } catch (error) {
             alert(error.response?.data?.message || 'Failed to delete user');
         }
@@ -142,13 +144,13 @@ const ManageUsers = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map(user => (
-                        <tr key={user._id}>
-                            <td>{user.name || user.fullname?.firstname + ' ' + user.fullname?.lastname}</td>
+                    {users.map((user, idx) => (
+                        <tr key={user._id || user.email || idx}>
+                            <td>{user.name || (user.fullname?.firstname ? user.fullname.firstname + ' ' + (user.fullname.lastname || '') : '')}</td>
                             <td>{user.email}</td>
                             <td>{user.role}</td>
                             <td>
-                                {user.role === 'member' && (
+                                {user.role === 'member' && user._id && (
                                     <button onClick={() => handleDeleteUser(user._id)} style={{ background: '#fff', color: '#000', border: '1px solid #000', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
                                 )}
                             </td>

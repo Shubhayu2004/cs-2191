@@ -8,9 +8,7 @@ const Home = () => {
   const { user } = useContext(UserDataContext); // Fetch user data from context
   const [notifications, setNotifications] = useState([]);
   const [showNotis, setShowNotis] = useState(false);
-  const [userCommittees, setUserCommittees] = useState([]); // State to store user's committees
-  const [errorMessage, setErrorMessage] = useState('');
-  const [loading, setLoading] = useState(true);
+  // Removed userCommittees, errorMessage, loading state as 'Your Committees' section is removed
 
   // Fetch notifications from API
   const fetchNotifications = async () => {
@@ -36,41 +34,7 @@ const Home = () => {
     // Optionally, mark all as read here
   };
 
-  // Fetch committees from API
-  useEffect(() => {
-    const fetchUserCommittees = async () => {
-      try {
-        const token = localStorage.getItem('token'); // Fetch token from localStorage
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/committees`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        // Filter committees where the user is a member based on email
-        const userEmail = user?.email; 
-        if (!userEmail) {
-          setErrorMessage('User email is not available.');
-          return;
-        }
-
-        const filteredCommittees = response.data.filter((committee) => 
-          committee.chairman?.email === userEmail ||
-          committee.convener?.email === userEmail ||
-          committee.members.some((member) => member.email === userEmail)
-        );
-
-        setUserCommittees(filteredCommittees);
-      } catch (error) {
-        console.error('Failed to fetch committees:', error);
-        setErrorMessage('Failed to load committees. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserCommittees();
-  }, [user]);
+  // Removed useEffect for fetching user committees as 'Your Committees' section is removed
 
   return (
     <div>
@@ -182,25 +146,7 @@ const Home = () => {
             </section>
           )}
 
-          {/* User's Committees */}
-          <section className={styles.yourCommittee}>
-            <h2>Your Committees</h2>
-            {loading ? (
-              <p>Loading committees...</p>
-            ) : errorMessage ? (
-              <p>{errorMessage}</p>
-            ) : userCommittees.length > 0 ? (
-              <ul>
-                {userCommittees.map((committee) => (
-                  <li key={committee._id}>
-                    {committee.committeeName || 'Unnamed Committee'}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>You are not part of any committees yet.</p>
-            )}
-          </section>
+          {/* User's Committees section removed as requested */}
         </div>
       </div>
     </div>

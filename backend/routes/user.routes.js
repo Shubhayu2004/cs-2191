@@ -37,8 +37,10 @@ router.get('/username', authMiddleware.authUser, userController.getUserNames);
 router.get('/by-email/:email', async (req, res) => {
     try {
         const email = req.params.email.trim();
+        console.log('by-email route received:', email);
         // Use case-insensitive regex for robust search
         const user = await User.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
+        console.log('User found:', user);
         if (!user) return res.status(404).json({ message: 'User not found' });
         res.json(user);
     } catch (err) {
