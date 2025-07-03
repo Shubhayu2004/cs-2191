@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import Home from "./pages/home.jsx";
 import CommitteeApp from "./pages/committee.jsx";
 import CommitteeDashboard from "./pages/committeeDash.jsx";
+
 import WelcomePage from "./pages/welcome.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/Registerpage.jsx";
@@ -23,6 +24,7 @@ const App = () => {
         <Routes>
           {/* Handle root path */}
           <Route path="/" element={<WelcomePage />} />
+
 
           {/* Other defined routes */}
           <Route path="/scheduleMeeting" element={<ScheduleMeeting />} />
@@ -47,6 +49,7 @@ const App = () => {
         </Routes>
       </UserContext>
     </AuthProvider>
+
   );
 };
 

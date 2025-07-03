@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { UserDataContext } from '../context/UserDataContext';
+
 import styles from '../styles/home.module.css';
 
 const Home = () => {
@@ -32,6 +33,12 @@ const Home = () => {
   const handleNotificationClick = () => {
     setShowNotis(!showNotis);
     // Optionally, mark all as read here
+  };
+  const [notifications, setNotifications] = useState(5); // Initial notification count
+  const [showNotis, setShowNotis] = useState(false);
+  const handleClick = () => {
+    setNotifications(0);
+    setShowNotis(true);
   };
 
   // Removed useEffect for fetching user committees as 'Your Committees' section is removed
@@ -103,6 +110,7 @@ const Home = () => {
           </div>
 
           {/* Notifications */}
+
           {showNotis && (
             <section className={styles.notifications}>
               <button
