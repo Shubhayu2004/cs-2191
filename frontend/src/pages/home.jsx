@@ -1,13 +1,38 @@
-import React, { useState } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { UserDataContext } from '../context/UserDataContext';
 
 import styles from '../styles/home.module.css';
 
 const Home = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useContext(UserDataContext); // Fetch user data from context
+  const [notifications, setNotifications] = useState([]);
+  const [showNotis, setShowNotis] = useState(false);
+  // Removed userCommittees, errorMessage, loading state as 'Your Committees' section is removed
 
-  const toggleMenu = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token'); // Fetch token from localStorage
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/notifications`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setNotifications(response.data);
+    } catch {
+      setNotifications([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const handleNotificationClick = () => {
+    setShowNotis(!showNotis);
+    // Optionally, mark all as read here
   };
   const [notifications, setNotifications] = useState(5); // Initial notification count
   const [showNotis, setShowNotis] = useState(false);
@@ -16,58 +41,76 @@ const Home = () => {
     setShowNotis(true);
   };
 
+  // Removed useEffect for fetching user committees as 'Your Committees' section is removed
+
   return (
-    <div className={styles.home}>
-      {/* Sidebar Menu */}
-      <div className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
-        <div className={styles.sidebarContent}>
-          <Link to="/">Home</Link>
-          <Link to="/committee">Committee</Link>
-          <Link to="/">Logout</Link>
-        </div>
-      </div>
+    <div>
+      {/* Header Section */}
+      <header className={styles.pageHeader}>
+        <h1>
+          Meeting <br />
+          Management Workspace
+        </h1>
+      </header>
 
-      {/* Hamburger Icon */}
-      <div
-        className={`${styles.hamburger} ${isSidebarOpen ? styles.open : ''}`}
-        onClick={toggleMenu}
-      >
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
+      <div className={styles.container}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <h1>
+            Meeting <br />
+            Manager
+          </h1>
+          <nav className={styles.menu}>
+            <Link to="/home" className={styles.menuItem}>
+              Home
+            </Link>
+            <Link to="/committee" className={styles.menuItem}>
+              Committee
+            </Link>
+            <Link to="/user/logout" className={styles.menuItem}>
+              Logout
+            </Link>
+          </nav>
+        </aside>
 
-      {/* Main Content */}
-      <div className={styles.homeContent}>
-        <h2 className={styles.homeHead}>Meeting Management Automation Workspace</h2>
-        <div className={styles.top}>
-          <div className={styles.pfp}>
-            <img
-              src="https://static.vecteezy.com/system/resources/previews/036/280/650/original/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg"
-              alt="Profile"
-            />
-          </div>
-          <div className={styles.person}>
-            <p><i className="fas fa-user"></i> Name: First Middle Last</p>
-            <p><i className="fas fa-envelope"></i> User ID: firstlast@gmail.com</p>
-            <p><i className="fas fa-briefcase"></i> Role: Head Of the Department, CST</p>
-          </div>
-          {/* <div className={styles.logo}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/IIEST_Shibpur_Logo.svg/1200px-IIEST_Shibpur_Logo.svg.png"
-              alt="Logo"
-            />
-          </div> */}
-          <div className={styles.noti}>
-            <button onClick={handleClick}>
-              <img src="/assets/noti.png" alt="Notifications" />
-              {notifications > 0 && (
-                <span className={styles.notiCount}>
-                  {notifications}
-                </span>
+        {/* Main Content */}
+        <div className={styles.homeContent}>
+          <div className={styles.top}>
+            {/* Profile Section */}
+            <div className={styles.pfp}>
+              <img
+                src="https://static.vecteezy.com/system/resources/previews/036/280/650/original/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-illustration-vector.jpg"
+                alt="Profile"
+              />
+            </div>
+            <div className={styles.person}>
+              <p>
+                <i className="fas fa-user"></i> Name: {user?.fullname?.firstname || 'Guest'}{' '}
+                {user?.fullname?.lastname || ''}
+              </p>
+              <p>
+                <i className="fas fa-envelope"></i> User ID: {user?.email || 'N/A'}
+              </p>
+              {user?.status === 'admin' && (
+                <p>
+                  <i className="fas fa-envelope"></i> Status: {user.status}
+                </p>
               )}
-            </button>
+            </div>
+
+            {/* Notifications Section */}
+            <div className={styles.noti}>
+              <button onClick={handleNotificationClick}>
+                <img src="/assets/noti.png" alt="Notifications" />
+                {notifications.filter(n => !n.isRead).length > 0 && (
+                  <span className={styles.notiCount}>{notifications.filter(n => !n.isRead).length}</span>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Notifications */}
+
           {showNotis && (
             <section className={styles.notifications}>
               <button
@@ -77,22 +120,41 @@ const Home = () => {
               >
                 x
               </button>
-
-
-
-              <h2 >Notifications</h2>
+              <h2>Notifications</h2>
               <ul>
-                <li>XYZ invited you to a meeting on 4th Feb at 3:40 pm</li>
-                <li>ABC invited you to a meeting on 10th Feb at 2:15 pm</li>
-                <li>DEF invited you to a meeting on 12th Feb at 11:00 am</li>
-                <li>GHI invited you to a meeting on 15th Feb at 4:45 pm</li>
-                <li>JKL invited you to a meeting on 18th Feb at 9:30 am</li>
-                {/* <tbody id="upcoming-meetings-tbody">
-                  {populateUpcomingMeetings()}
-                </tbody> */}
+                {notifications.length === 0 && <li>No notifications.</li>}
+                {notifications.map((noti) => (
+                  <li key={noti._id} style={{ fontWeight: noti.isRead ? 'normal' : 'bold' }}>
+                    {noti.link ? (
+                      <Link
+                        to={noti.link}
+                        onClick={async () => {
+                          if (!noti.isRead) {
+                            try {
+                              const token = localStorage.getItem('token');
+                              await axios.put(`${import.meta.env.VITE_BASE_URL}/api/notifications/${noti._id}/read`, {}, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              setNotifications((prev) => prev.map(n => n._id === noti._id ? { ...n, isRead: true } : n));
+                            } catch {
+                              // Optionally handle error
+                            }
+                          }
+                        }}
+                      >
+                        {noti.message}
+                      </Link>
+                    ) : (
+                      noti.message
+                    )}
+                    <span style={{ marginLeft: 8, fontSize: 10, color: '#888' }}>{new Date(noti.createdAt).toLocaleString()}</span>
+                  </li>
+                ))}
               </ul>
             </section>
           )}
+
+          {/* User's Committees section removed as requested */}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 const userModel = require('../models/user.model');
 const userService = require('../services/user.service');
 const { validationResult } = require('express-validator');
-// const blackListTokenModel = require('../models/blackListToken.model');
+const blackListTokenModel = require('../models/blacklistToken.model');
 
 module.exports.registerUser = async (req, res, next) => {
 
@@ -11,12 +11,6 @@ module.exports.registerUser = async (req, res, next) => {
     }
 
     const { fullname, email, password } = req.body;
-
-    const isUserAlready = await userModel.findOne({ email });
-
-    if (isUserAlready) {
-        return res.status(400).json({ message: 'User already exist' });
-    }
 
     const hashedPassword = await userModel.hashPassword(password);
 
@@ -33,7 +27,6 @@ module.exports.registerUser = async (req, res, next) => {
 
 
 }
-
 module.exports.loginUser = async (req, res, next) => {
 
     const errors = validationResult(req);
@@ -61,19 +54,91 @@ module.exports.loginUser = async (req, res, next) => {
 
     res.status(200).json({ token, user });
 }
-
 module.exports.getUserProfile = async (req, res, next) => {
-
-    res.status(200).json(req.user);
+    // Remove status for non-admins
+    const user = req.user.toObject ? req.user.toObject() : req.user;
+    if (user.status !== 'admin') {
+        delete user.status;
+    }
+    res.status(200).json(user);
 
 }
-
 module.exports.logoutUser = async (req, res, next) => {
     res.clearCookie('token');
     const token = req.cookies.token || req.headers.authorization.split(' ')[ 1 ];
 
-     await blackListTokenModel.create({ token });
+    await blackListTokenModel.create({ token });
 
     res.status(200).json({ message: 'Logged out' });
 
 }
+module.exports.updateUserRole = async (req, res) => {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    try {
+        const user = await userModel.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        if (role === 'admin') {
+            user.status = 'admin';
+        } else {
+            user.status = undefined;
+        }
+        await user.save();
+
+        return res.status(200).json({ 
+            message: 'User role updated successfully.',
+            user: {
+                _id: user._id,
+                email: user.email,
+                status: user.status,
+                fullname: user.fullname
+            }
+        });
+    } catch (err) {
+        console.error('Role update error:', err);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+}
+module.exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await userModel.find().select('-password');
+        // Remove status for all users except admin
+        const usersSanitized = users.map(u => {
+            const userObj = u.toObject();
+            if (userObj.status !== 'admin') {
+                delete userObj.status;
+            }
+            return userObj;
+        });
+        return res.status(200).json(usersSanitized);
+    } catch (err) {
+        console.error('Get users error:', err);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+}
+module.exports.getUserNames = async (req, res) => {
+    try {
+        const users = await userModel.find().select('fullname email status');
+        return res.status(200).json(users.fullname);
+    } catch (err) {
+        console.error('Get user names error:', err);
+        return res.status(500).json({ message: 'Server error.' });
+    }
+
+}
+module.exports.getUserIdsByEmails = async (emails) => {
+    // Accepts array of emails, returns array of user _ids
+    if (!Array.isArray(emails) || emails.length === 0) {
+        console.warn('getUserIdsByEmails called with empty or invalid emails:', emails);
+        return [];
+    }
+    const users = await userModel.find({ email: { $in: emails } }).select('_id email');
+    if (users.length !== emails.length) {
+        console.warn('Some emails not found in user collection:', emails, 'Found:', users.map(u => u.email));
+    }
+    return users.map(u => u._id);
+};

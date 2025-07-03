@@ -2,16 +2,100 @@
   font-family: "Roboto", sans-serif;
   background-color: #f0f4f8;
   margin: 0;
-  padding: 0px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-
   align-items: center;
   box-sizing: border-box;
   min-height: 100vh;
+  padding-top: 15px;
 }
 
-button {
+.primary {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 2rem 3rem;
+  max-width: 1200px;
+  width: 100%;
+}
+
+#comName {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 10px 0;
+  color: #333;
+  text-align: left;
+}
+
+.desc {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#purpose {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #555;
+  margin: 20px 0;
+  text-align: justify;
+}
+
+.chief {
+  display: flex;
+  flex-direction: row;
+  gap: 3rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  padding: 1.5rem;
+  width: 100%;
+  margin-left: 30%;
+
+}
+
+.chairman,
+.convener {
+  background-color: #ffffff;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  flex: 1;
+  max-width: 320px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.chairman h4,
+.convener h4 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #0d6efd;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.chairman p,
+.convener p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+#purpose,
+#comName {
+  text-align: left;
+}
+
+button,
+.schedule-btn,
+.minutes-button,
+.manage-btn {
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -23,25 +107,59 @@ button {
   color: #fff;
   transition: background-color 0.3s;
   margin: 5px;
-
+  text-decoration: none;
 }
 
-button:hover {
+button:hover,
+.minutes-button:hover {
   background-color: rgb(237, 160, 45);
 }
 
+/* 
 .primary {
-  background-color: rgb(223, 195, 69);
   display: flex;
-
   justify-content: space-between;
-  align-items: start;
-  padding: 30px;
-
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 95%;
-
+  align-items: flex-start;
+  gap: 2rem;
+  padding: 1rem;
 }
+
+.desc {
+  flex: 1;
+  max-width: 300px;
+}
+
+.chief {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  flex-wrap: nowrap;
+}
+
+.chairman,
+.convener {
+  background-color: #f2f2f2;
+  padding: 1rem;
+  border-radius: 12px;
+  flex: 1;
+  max-width: 300px;
+}
+
+
+.chairman h4,
+.convener h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #0d6efd;
+}
+
+.chairman p,
+.convener p {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+} */
+
 
 .back {
   align-self: flex-start;
@@ -63,18 +181,19 @@ button:hover {
   background-color: #555657;
 }
 
-.desc .chief {
+/* .desc .chief {
   padding: 5px;
   font-size: 50px;
   font-weight: 500;
-}
-
+} */
+/* 
 #comName {
   font-size: 30px;
   font-weight: 700;
   margin: 10px 0 10px 0;
-}
+} */
 
+/* 
 #purp {
   font-size: 24px;
   font-weight: 600;
@@ -92,7 +211,7 @@ button:hover {
   font-size: 18px;
   line-height: 1.5;
   font-weight: 400;
-}
+} */
 
 ol {
   background-color: white;
@@ -114,27 +233,47 @@ li {
 }
 
 .utility button,
-#save {
+#save,
+.notify {
 
   background-color: #1e8313;
 
 }
 
 .utility button:hover,
-#save:hover {
+#save:hover,
+.notify:hover,
+.committeeDash .upcoming-btn:hover {
   background-color: #219b13;
 }
 
-.utility #leave {
-  position: absolute;
-  right: 30px;
+
+.committeeDash .upcoming-btn {
+  text-decoration: none;
+  background-color: #1e8313;
+  font-weight: 600;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 600;
+
+  font-family: Arial, Helvetica, sans-serif;
+  color: #fff;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+
+.utility .leave-btn {
+
   margin-left: auto;
   margin-right: 12px;
   background-color: rgb(198, 1, 1);
   color: #fff;
 }
 
-.utility #leave:hover {
+.utility .leave-btn:hover {
   background-color: rgb(255, 0, 0);
   color: #fff;
 }
@@ -151,6 +290,24 @@ li {
   margin: 20px 0 10px 0;
   padding: 10px;
   background-color: rgb(209, 207, 207);
+}
+
+.schedule-btn {
+  background-color: #007bff;
+  text-decoration: none;
+}
+
+.schedule-btn:hover {
+  background-color: #0056b3;
+
+}
+
+.manage-btn {
+  background-color: #2a0d77;
+}
+
+.manage-btn:hover {
+  background-color: #330bb6;
 }
 
 table {
@@ -270,10 +427,10 @@ label {
   z-index: 1000;
 }
 
-#recent-meetings-section {
+.recent-meetings-section {
   background-color: white;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -285,4 +442,69 @@ label {
   overflow-y: auto;
   height: 80vh;
   z-index: 1000;
+}
+
+.suggest {
+  background-color: rgb(12, 12, 204);
+}
+
+.suggest:hover {
+  background-color: #13699b;
+}
+
+.create-mom-section {
+  background-color: white;
+  width: 100%;
+  max-width: 800px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  margin: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow-y: auto;
+  max-height: 90vh;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.create-mom-section h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 24px;
+  color: #333;
+}
+
+.create-mom-section label {
+  font-weight: bold;
+  margin-top: 10px;
+  font-size: 16px;
+  color: #444;
+  margin-bottom: 0;
+}
+
+.mom-input,
+.create-mom-section textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: border-color 0.3s;
+}
+
+.mom-input:focus,
+.create-mom-section textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.create-mom-section textarea {
+  resize: vertical;
+  min-height: 150px;
 }

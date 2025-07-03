@@ -1,92 +1,128 @@
-import './scheduleMeeting.css';
-import React, { useState } from 'react';
+
+import styles from "../styles/scheduleMeeting.module.css";
+import { useState, useEffect, useContext } from "react";
+import Sidebar from '../components/Sidebar';
+import { useParams, useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { UserDataContext } from '../context/UserDataContext';
 
 const ScheduleMeeting = () => {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [scheduleMeetingVisibility, setScheduleMeetingVisibility] = useState(false);
-    const [showCommitteeList, setShowCommitteeList] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         date: '',
         startTime: '',
-        location: '',
+
         description: '',
     });
-    const committee = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
-    const [selectedCommittees, setSelectedCommittees] = useState([]);
+    const location = useLocation();
+    const params = useParams();
+    const { user } = useContext(UserDataContext);
+    const [committee, setCommittee] = useState(null);
+    const [loading, setLoading] = useState(true);
+    // Try to get committeeId from route state, fallback to useParams
+    const committeeId = location.state?.committeeId || params.id;
+
 
     const toggleScheduleMeetingVisibility = () => {
         setScheduleMeetingVisibility(!scheduleMeetingVisibility);
     };
 
-    const toggleCommitteeList = () => {
-        setShowCommitteeList(!showCommitteeList);
-    };
-
-    const handleCommitteeSelection = (member) => {
-        setSelectedCommittees((prev) =>
-            prev.includes(member)
-                ? prev.filter((item) => item !== member)
-                : [...prev, member]
-        );
-    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [name]: value }));
     };
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
-        const { title, date, startTime } = formData;
-
+        const { title, date, startTime, description } = formData;
         if (title && date && startTime) {
-            alert(`Meeting Scheduled: ${title} on ${date} at ${startTime}`);
-            setFormData({
-                title: '',
-                date: '',
-                startTime: '',
-                location: '',
-                description: '',
-            });
-            setSelectedCommittees([]);
-            setScheduleMeetingVisibility(false);
+            try {
+                const token = localStorage.getItem('token');
+                await axios.post(
+                    `${import.meta.env.VITE_BASE_URL}/api/meetings/schedule`,
+                    {
+                        committeeId,
+                        topic: title,
+                        date,
+                        time: startTime
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                alert(`Meeting Scheduled: ${title} on ${date} at ${startTime}`);
+                setFormData({
+                    title: '',
+                    date: '',
+                    startTime: '',
+                    location: '',
+                    description: '',
+                });
+                setScheduleMeetingVisibility(false);
+            } catch {
+                alert('Failed to schedule meeting.');
+            }
+
         } else {
             alert('Please fill in all required fields');
         }
     };
 
+    // Fetch committee data to check role
+    useEffect(() => {
+        async function fetchCommittee() {
+            if (!committeeId) return;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/api/committees/${committeeId}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setCommittee(response.data);
+            } catch {
+                setCommittee(null);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchCommittee();
+    }, [committeeId]);
+
+    // Determine the user's role for this committee
+    let userCommitteeRole = null;
+    if (committee && user?.email) {
+        if (committee.chairman && committee.chairman.email === user.email) {
+            userCommitteeRole = "chairman";
+        } else if (committee.convener && committee.convener.email === user.email) {
+            userCommitteeRole = "convener";
+        } else if (committee.members && Array.isArray(committee.members)) {
+            const found = committee.members.find(m => m.email === user.email);
+            if (found) userCommitteeRole = found.role || "member";
+        }
+    }
+    const isConvener = userCommitteeRole === "convener";
+
+    if (loading) return <div>Loading...</div>;
+    if (!isConvener) return <div>You do not have permission to schedule meetings for this committee.</div>;
+
     return (
-        <div className="schedule-meeting">
-            <button className="btn" onClick={toggleScheduleMeetingVisibility}>
+        <div className={styles.scheduleMeetingContainer}>
+            <Sidebar
+                isOpen={isSidebarOpen}
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                className={styles.scheduleSidebar}
+            />
+            <button className={styles.btnForMeeting} onClick={toggleScheduleMeetingVisibility}>
                 Schedule A Meeting
             </button>
-
             {scheduleMeetingVisibility && (
-                <section id="scheduleMeetingForm">
-                    <button className="btn" onClick={toggleCommitteeList}>
-                        Select Committee
-                    </button>
-                    {showCommitteeList && (
-                        <div className="committee-list">
-                            {committee.map((member) => (
-                                <div
-                                    key={member}
-                                    className={`committee ${
-                                        selectedCommittees.includes(member) ? 'selected' : ''
-                                    }`}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        id={member}
-                                        value={member}
-                                        checked={selectedCommittees.includes(member)}
-                                        onChange={() => handleCommitteeSelection(member)}
-                                    />
-                                    <label htmlFor={member}>{member}</label>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                <section className={styles.scheduleMeetingForm}>
 
                     <form onSubmit={handleFormSubmit}>
                         <label htmlFor="title">Title:</label>
@@ -119,15 +155,6 @@ const ScheduleMeeting = () => {
                             required
                         />
 
-                        <label htmlFor="location">Location/Link:</label>
-                        <input
-                            type="text"
-                            id="location"
-                            name="location"
-                            value={formData.location}
-                            onChange={handleInputChange}
-                        />
-
                         <label htmlFor="description">Description:</label>
                         <textarea
                             id="description"
@@ -136,7 +163,8 @@ const ScheduleMeeting = () => {
                             onChange={handleInputChange}
                         ></textarea>
 
-                        <button className="btn" type="submit">
+                        <button className={styles.btnForMeeting} type="submit">
+
                             Schedule Meeting
                         </button>
                     </form>

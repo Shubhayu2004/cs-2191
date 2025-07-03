@@ -1,0 +1,62 @@
+/* src/RegisterPage.css */
+.registercontainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f0f8ff;
+}
+
+.registercontainer h1 {
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: #333;
+}
+
+.registercontainer form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 400px; 
+  background-color: white;
+  padding: 30px; 
+  border-radius: 10px; 
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+}
+
+.registercontainer form div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.registercontainer label {
+  width: 35%;
+  text-align: right;
+  margin-right: 15px;
+  font-size: 16px;
+  color: #333;
+}
+
+.registercontainer input {
+  width: 60%;
+  padding: 12px; 
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px; 
+}
+
+.registercontainer button {
+  padding: 12px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px; 
+}
+
+.registercontainer button:hover {
+  background-color: #45a049;
+}

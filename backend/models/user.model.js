@@ -26,8 +26,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         select: false,
     },
-    socketId: {
+    status: {
         type: String,
+        default: undefined, // Only set if admin
+        enum: ['admin'], // Only admin is a user property
     },
 })
 

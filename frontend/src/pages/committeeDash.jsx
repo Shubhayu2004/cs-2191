@@ -1,209 +1,510 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
-import "../styles/committeeDash.css"; // Add your styles here or inline styles
+import { useState, useEffect, useContext, useCallback } from "react";
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import axios from 'axios';
+import { jsPDF } from "jspdf";
+import "../styles/committeeDash.css";
+import { UserDataContext } from '../context/UserDataContext';
+import React from "react";
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const { user } = useContext(UserDataContext);
 
-    const [showUpcomingMeetings, setShowUpcomingMeetings] = useState(false);
+    const [committee, setCommittee] = useState({
+        committeeName: '',
+        committeePurpose: '',
+        chairman: { name: '', email: '', contactNumber: '' },
+        convener: { name: '', email: '', contactNumber: '' },
+        members: []
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [showRecentMeetings, setShowRecentMeetings] = useState(false);
-    const [showMinutesForm, setShowMinutesForm] = useState(false);
+    const [selectedMinutes, setSelectedMinutes] = useState("");
+    const [showMinutes, setShowMinutes] = useState(false);
+    const [editedMinutes, setEditedMinutes] = useState("");
+    const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null);
+    const [suggestionBoxIndex, setSuggestionBoxIndex] = useState(null);
+    const [suggestionText, setSuggestionText] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-    const upcomingMeetingsData = [
-        { topic: 'Exam', date: '19/11/2024', time: '14:30' },
-        { topic: 'Research', date: '19/12/2024', time: '14:30' },
-        { topic: 'AI Workshop', date: '25/12/2024', time: '10:00' },
-        { topic: 'Tech Team Sync', date: '02/01/2025', time: '09:30' },
-        { topic: 'Cloud Deployment Review', date: '10/01/2025', time: '16:00' },
-        { topic: 'API Integration Discussion', date: '15/01/2025', time: '11:00' },
-        { topic: 'Code Quality Audit', date: '20/01/2025', time: '15:30' },
-        { topic: 'DevOps Strategy Planning', date: '28/01/2025', time: '13:00' },
-        { topic: 'Cybersecurity Awareness', date: '05/02/2025', time: '10:30' },
-        { topic: 'System Architecture Review', date: '12/02/2025', time: '14:00' }
-    ];
+    // Determine the user's role for this committee
+    let userCommitteeRole = null;
+    if (committee && user?.email) {
+        if (committee.chairman && committee.chairman.email === user.email) {
+            userCommitteeRole = "chairman";
+        } else if (committee.convener && committee.convener.email === user.email) {
+            userCommitteeRole = "convener";
+        } else if (committee.members && Array.isArray(committee.members)) {
+            const found = committee.members.find(m => m.email === user.email);
+            if (found) userCommitteeRole = found.role || "member";
+        }
+    }
+
+    // Global admin check (remains admin for all committees)
+    const isAdmin = user?.status === "admin";
+    // Role-based access for this committee
+    const isConvener = userCommitteeRole === "convener";
+    const isMember = userCommitteeRole === "member";
+    const isChairman = userCommitteeRole === "chairman";
+    // Admin can always see Manage Users, but other actions are per-committee role
+    const canEditMinutes = isConvener;
+    const canScheduleMeetings = isConvener;
+    const canManageUsers = isAdmin ;
+    const [newMinutesText, setNewMinutesText] = useState("");
+    const [showCreateMoM, setShowCreateMoM] = useState(false);
+    const [newMoMTopic, setNewMoMTopic] = useState("");
+    const [newMoMDate, setNewMoMDate] = useState("");
+    const [newMoMTime, setNewMoMTime] = useState("");
 
 
+    const DUMMY_RECENT_MEETINGS = React.useMemo(() => [
+        {
+            topic: "Budget Planning",
+            date: "2024-03-10",
+            time: "10:00 AM",
+            minutesText: "Discussed allocation of funds for upcoming projects and reviewed last quarter's expenses."
+        },
+        {
+            topic: "Annual Report Discussion",
+            date: "2024-03-15",
+            time: "2:30 PM",
+            minutesText: "Reviewed department performance, proposed improvements, and finalized the annual report format."
+        },
+        {
+            topic: "Event Coordination",
+            date: "2024-03-20",
+            time: "11:00 AM",
+            minutesText: "Planned logistics, assigned roles, and confirmed the venue for the upcoming seminar."
+        }
+    ], []);
 
-    const recentMeetingsData = [
-        { topic: 'Exam', date: '19/10/2024', time: '14:30', minutes: 'minutes1.pdf' },
-        { topic: 'Research', date: '29/10/2024', time: '15:00', minutes: 'minutes2.pdf' },
-        { topic: 'AI Ethics Discussion', date: '05/10/2024', time: '11:00', minutes: 'minutes3.pdf' },
-        { topic: 'Backend Optimization Review', date: '10/10/2024', time: '13:30', minutes: 'minutes4.pdf' },
-        { topic: 'Blockchain Implementation', date: '12/10/2024', time: '10:00', minutes: 'minutes5.pdf' },
-        { topic: 'Frontend Frameworks Comparison', date: '15/10/2024', time: '16:00', minutes: 'minutes6.pdf' },
-        { topic: 'Data Privacy Seminar', date: '18/10/2024', time: '09:00', minutes: 'minutes7.pdf' },
-        { topic: 'Machine Learning Trends', date: '20/10/2024', time: '14:00', minutes: 'minutes8.pdf' },
-        { topic: 'Network Security Assessment', date: '22/10/2024', time: '12:30', minutes: 'minutes9.pdf' },
-        { topic: 'Full Stack Development Update', date: '25/10/2024', time: '10:30', minutes: 'minutes10.pdf' }
-    ];
+    const [recentMeetings, setRecentMeetings] = useState([]);
 
+    const fetchMinutes = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            if (response.data && response.data.length > 0) {
+                setRecentMeetings(response.data);
+            } else {
+                setRecentMeetings(DUMMY_RECENT_MEETINGS);
+            }
+        } catch (err) {
+            console.error('Error fetching minutes:', err);
+            setError(err.response?.data?.message || 'Error loading minutes');
+            setRecentMeetings(DUMMY_RECENT_MEETINGS);
+        }
+    }, [id, DUMMY_RECENT_MEETINGS]);
 
-    const MembersData = [
-        { name: 'Saurav', email: 'saurav482@example.com', mobile: '+919876543210' },
-        { name: 'Aritra', email: 'aritra831@example.com', mobile: '+919845673210' },
-        { name: 'Tanisha', email: 'tanisha294@example.com', mobile: '+919812345678' },
-        { name: 'Arham', email: 'arham117@example.com', mobile: '+919834567890' },
-        { name: 'Akshay', email: 'akshay508@example.com', mobile: '+919876123456' },
-        { name: 'Akshay', email: 'akshay672@example.com', mobile: '+919876987654' },
-        { name: 'Akshay', email: 'akshay329@example.com', mobile: '+919876543219' },
-        { name: 'Akshay', email: 'akshay840@example.com', mobile: '+919876000001' },
-        { name: 'Akshay', email: 'akshay123@example.com', mobile: '+919876543456' },
-        { name: 'Arham', email: 'arham902@example.com', mobile: '+919812456789' }
-    ];
+    const fetchCommitteeData = useCallback(async () => {
+        if (!id) {
+            setError('No committee ID provided');
+            setLoading(false);
+            return;
+        }
 
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/api/committees/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            setCommittee(response.data);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching committee:', err);
+            setError(err.response?.data?.message || 'Error loading committee');
+            setLoading(false);
+        }
+    }, [id]);
 
     useEffect(() => {
+        fetchCommitteeData();
+    }, [fetchCommitteeData]);
 
-
-    }, []);
-
-    const populateMembers = () => {
-        return MembersData.map((member, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{member.name} </td>
-                <td>{member.email} </td>
-                <td>{member.mobile} </td>
-            </tr>
-        ));
+    const handleToggleRecentMeetings = () => {
+        if (!showRecentMeetings && recentMeetings.length === 0) {
+            fetchMinutes();
+        }
+        setShowRecentMeetings(prev => !prev);
     };
 
-
-    const populateUpcomingMeetings = () => {
-        return upcomingMeetingsData.map((meeting, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{meeting.topic} </td>
-                <td>{meeting.date} </td>
-                <td>{meeting.time} </td>
-            </tr>
-        ));
+    const handleViewMinutes = (minutesText, index) => {
+        setSelectedMinutes(minutesText);
+        setEditedMinutes(minutesText);
+        setSelectedMeetingIndex(index);
+        setShowMinutes(true);
     };
 
-    const populateRecentMeetings = () => {
-        return recentMeetingsData.map((meeting, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{meeting.topic}</td>
-                <td>{meeting.date}</td>
-                <td>{meeting.time}</td>
-                <td>
-                    <button
-                        onClick={() => {
-                            console.log("View button clicked for:", meeting);
-                            toggleSection(setShowMinutesForm);
-                        }}
-                    >
-                        View
-                    </button>
-                </td>
-            </tr>
-        ));
+    const handleSaveMinutes = async () => {
+    if (selectedMeetingIndex === null) return;
+
+    const updatedMeetings = [...recentMeetings];
+    updatedMeetings[selectedMeetingIndex].minutesText = editedMinutes;
+
+    // Detect if it's a dummy meeting (no _id property)
+    const isDummy = !recentMeetings[selectedMeetingIndex]._id;
+
+    if (isDummy) {
+        // Just update the local state
+        setRecentMeetings(updatedMeetings);
+        setShowMinutes(false);
+        setSelectedMeetingIndex(null);
+        alert("Dummy meeting minutes updated locally.");
+        return;
+    }
+
+    if (!canEditMinutes) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const meeting = recentMeetings[selectedMeetingIndex];
+        // Validate and format date/time
+        const formattedDate = meeting.date ? new Date(meeting.date).toISOString().slice(0, 10) : '';
+        let formattedTime = meeting.time;
+        if (formattedTime && formattedTime.length === 5 && formattedTime[2] === ':') {
+            // already in HH:mm
+        } else if (formattedTime && formattedTime.match(/\d{1,2}:\d{2}\s?(AM|PM)/i)) {
+            // Convert 12-hour to 24-hour
+            const [time, period] = formattedTime.split(/\s/);
+            let [hours, minutes] = time.split(":");
+            hours = parseInt(hours, 10);
+            if (/PM/i.test(period) && hours < 12) hours += 12;
+            if (/AM/i.test(period) && hours === 12) hours = 0;
+            formattedTime = `${hours.toString().padStart(2, '0')}:${minutes}`;
+        }
+        if (!meeting.topic || !formattedDate || !formattedTime || !editedMinutes.trim()) {
+            alert("All fields (topic, date, time, minutes) are required.");
+            return;
+        }
+        await axios.put(
+            `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}`,
+            {
+                topic: meeting.topic,
+                date: formattedDate,
+                time: formattedTime,
+                minutesText: editedMinutes,
+                committeeId: meeting.committeeId || committee._id || id
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        await fetchMinutes();
+        setShowMinutes(false);
+        setSelectedMeetingIndex(null);
+    } catch (err) {
+        setError('Failed to save minutes: ' + (err.response?.data?.message || err.message));
+        alert('Failed to save minutes: ' + (err.response?.data?.message || err.message));
+    }
+};
+
+    const handleSaveNewMoM = async () => {
+        if (!newMoMTopic.trim() || !newMoMDate || !newMoMTime || !newMinutesText.trim()) {
+            alert("Please fill in all fields for the new MoM.");
+            return;
+        }
+        try {
+            const token = localStorage.getItem("token");
+            await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/create`,
+                {
+                    committeeId: id,
+                    topic: newMoMTopic,
+                    date: newMoMDate,
+                    time: newMoMTime,
+                    minutesText: newMinutesText
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            alert("MoM saved successfully!");
+            setNewMinutesText("");
+            setNewMoMTopic("");
+            setNewMoMDate("");
+            setNewMoMTime("");
+            setShowCreateMoM(false);
+            fetchMinutes();
+        } catch (err) {
+            console.error("Error saving MoM:", err);
+            alert("Failed to save MoM.");
+        }
     };
 
-    const toggleSection = (setter) => {
-        console.log("Toggling section"); // Debug log
-        setter((prev) => !prev);
+    const handleGeneratePDF = () => {
+        if (!selectedMinutes) return;
+        const doc = new jsPDF();
+        const maxWidth = 190;
+        const textLines = doc.splitTextToSize(selectedMinutes, maxWidth);
+        doc.text(textLines, 10, 10);
+        doc.save("minutes.pdf");
     };
 
-    const generatePDF = () => {
-        import("jspdf").then((jsPDF) => {
-            const doc = new jsPDF.jsPDF();
-            const content = document.getElementById("detail").value;
-            doc.text(content, 10, 10);
-            doc.save("minutes.pdf");
-        });
+    const handleDissolveCommittee = async () => {
+        const confirmed = window.confirm('Are you sure you want to dissolve this committee? This action cannot be undone.');
+        if (!confirmed) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(
+                `${import.meta.env.VITE_BASE_URL}/api/committees/${id}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    data: { committeeId: id }
+                }
+            );
+            alert('Committee dissolved successfully.');
+            navigate('/committee');
+        } catch (err) {
+            console.error('Error dissolving committee:', err);
+            setError(err.response?.data?.message || 'Error dissolving committee');
+            alert('Failed to dissolve committee: ' + (err.response?.data?.message || err.message));
+        }
     };
+
+    const handleSubmitSuggestion = async (meetingId) => {
+        if (!meetingId) {
+            alert("Cannot submit suggestion for this meeting.");
+            return;
+        }
+        if (!suggestionText.trim()) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(
+                `${import.meta.env.VITE_BASE_URL}/api/minutes/${meetingId}/suggestions`,
+                {
+                    userId: user._id,
+                    suggestion: suggestionText.trim()
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            alert("Suggestion submitted successfully.");
+            setSuggestionBoxIndex(null);
+            setSuggestionText("");
+        } catch (err) {
+            console.error('Error submitting suggestion:', err);
+            alert("Failed to submit suggestion.");
+        }
+    };
+
+    const handleViewSuggestions = async () => {
+        setShowSuggestions((prev) => !prev);
+        if (!showSuggestions) {
+            setLoadingSuggestions(true);
+            try {
+                const token = localStorage.getItem('token');
+                // Fetch all meetings for this committee
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                const meetings = response.data || [];
+                // Fetch suggestions for each meeting
+                const allSuggestions = [];
+                for (const meeting of meetings) {
+                    if (!meeting._id) continue;
+                    const sugRes = await axios.get(
+                        `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}/suggestions`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        }
+                    );
+                    const suggestionsForMeeting = (sugRes.data || []).map(s => ({
+                        ...s,
+                        meetingTopic: meeting.topic,
+                        meetingDate: meeting.date,
+                    }));
+                    allSuggestions.push(...suggestionsForMeeting);
+                }
+                setSuggestions(allSuggestions);
+            } catch {
+                setSuggestions([]);
+            } finally {
+                setLoadingSuggestions(false);
+            }
+        }
+    };
+
+    const handleEditMoM = (meeting) => {
+        // Find the index of the meeting in recentMeetings
+        const index = recentMeetings.findIndex(m => m._id === meeting._id);
+        if (index !== -1) {
+            setSelectedMeetingIndex(index);
+            setEditedMinutes(meeting.minutesText);
+            setShowMinutes(true);
+        }
+    };
+
+    // For convener: suggestions grouped by MoM
+    const [momSuggestions, setMomSuggestions] = useState([]);
+
+    useEffect(() => {
+        if (isConvener && showRecentMeetings) {
+            const fetchSuggestions = async () => {
+                setLoadingSuggestions(true);
+                try {
+                    const token = localStorage.getItem('token');
+                    const res = await axios.get(
+                        `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}/suggestions`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        }
+                    );
+                    setMomSuggestions(res.data || []);
+                } catch {
+                    setMomSuggestions([]);
+                } finally {
+                    setLoadingSuggestions(false);
+                }
+            };
+            fetchSuggestions();
+        }
+    }, [isConvener, showRecentMeetings, id]);
+
+    if (loading) return <div className="loading">Loading...</div>;
+    if (error) return <div className="error">Error: {error}</div>;
+    if (!committee) return <div>No committee found</div>;
 
     return (
         <div className="committeeDash">
             <div className="back">
-                <button onClick={() => navigate('/committee')}>
-                    Go Back
-                </button>
+                <button onClick={() => navigate('/committee')}>Go Back</button>
             </div>
+
             <div className="primary">
                 <div className="desc">
-                    <h2 id="comName">Tech Committee</h2>
-                    <h3 id="purp">Purpose :</h3>
-                    <p id="purpose">
-                        This committee is formed with the moto of discussing tech events to
-                        be conducted by the Department of Computer Science and Technology
-                    </p>
+                    <h2 id="comName">{committee.committeeName}</h2>
+                    <h3 id="purp">Purpose:</h3>
+                    <p id="purpose">{committee.committeePurpose}</p>
                 </div>
+
                 <div className="chief">
-                    <h4>Chairperson : Subhayu</h4>
-                    <h4>Convenor : Aishik</h4>
+                    <div className="chairman">
+                        <h4>Chairperson</h4>
+                        <p>Name: {committee.chairman.name}</p>
+                        <p>Email: {committee.chairman.email}</p>
+                    </div>
+
+                    <div className="convener">
+                        <h4>Convener</h4>
+                        <p>Name: {committee.convener.name}</p>
+                        <p>Email: {committee.convener.email}</p>
+                    </div>
                 </div>
             </div>
+
             <div className="utility">
-                <button
-                    id="upcoming-meetings-btn"
-                    onClick={() => toggleSection(setShowUpcomingMeetings)}
+                {canManageUsers && (
+                    <Link
+                        to={`/manage-users?committeeId=${id}`}
+                        state={{ committeeId: id, committeeName: committee.committeeName }}
+                        className="manage-btn"
+                    >
+                        Manage Users
+                    </Link>
+                )}
+                <a
+                    href={`/scheduleCalendar?committeeId=${id}`}
+                    className="upcoming-btn"
                 >
                     Upcoming Meetings
+                </a>
+                <button className="upcoming-btn" onClick={handleToggleRecentMeetings}>
+                    {showRecentMeetings ? 'Hide' : 'Show'} Recent Meetings
                 </button>
-                <button
-                    id="recent-meetings-btn"
-                    onClick={() => toggleSection(setShowRecentMeetings)}
-                >
-                    Recent Meetings
-                </button>
-                <button id="leave">Leave</button>
+                {canScheduleMeetings && (
+                    <Link
+                        to={`/scheduleMeeting`}
+                        state={{ committeeId: id, committeeName: committee.committeeName }}
+                        className="upcoming-btn"
+                    >
+                        Schedule Meeting
+                    </Link>
+                )}
+                {isConvener && (
+                    <button className="create-mom-btn" onClick={() => setShowCreateMoM(true)}>
+                        Create New MoM
+                    </button>
+                )}
+                {/* Dissolve Committee button for chairman only */}
+                {isChairman && (
+                    <button onClick={handleDissolveCommittee} className="dissolve-btn" style={{backgroundColor: 'red', color: 'white'}}>
+                        Dissolve Committee
+                    </button>
+                )}
             </div>
+
             <div className="members">
-                <h2 id="listHead">Committee Members</h2>
+                <h2>Committee Members</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>Sl No.</th>
                             <th>Name</th>
                             <th>Email ID</th>
-                            <th>Contact No.</th>
                         </tr>
                     </thead>
-                    <tbody id="member-list">
-                        {populateMembers()}
+                    <tbody>
+                        {committee.members.map((member, index) => (
+                            <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{member.name}</td>
+                                <td>{member.email}</td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
 
-            {showUpcomingMeetings && (
-                <section id="upcoming-meetings-section">
-                    <button
-                        type="button"
-                        className="close-btn"
-                        onClick={() => setShowUpcomingMeetings(false)}
-                    >
-                        x
-                    </button>
-                    <h2 style={{ textAlign: "center" }}>Upcoming Meetings</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Sl No.</th>
-                                <th>Topic</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="upcoming-meetings-tbody">
-                            {populateUpcomingMeetings()}
-                        </tbody>
-                    </table>
-                </section>
-            )}
-
             {showRecentMeetings && (
-                <section id="recent-meetings-section">
-                    <button
-                        type="button"
-                        className="close-btn"
-                        onClick={() => setShowRecentMeetings(false)}
-                    >
-                        x
+                <section className="recent-meetings-section">
+                    <button className="close-btn" onClick={() => setShowRecentMeetings(false)}>
+                        ✕
                     </button>
-                    <h2 style={{ textAlign: "center" }}>Recent Meetings</h2>
+                    <h2>Recent Meetings</h2>
                     <table>
                         <thead>
                             <tr>
@@ -214,36 +515,183 @@ function CommitteeDashboard() {
                                 <th>Minutes</th>
                             </tr>
                         </thead>
-                        <tbody id="recent-meetings-tbody">
-                            {populateRecentMeetings()}
+                        <tbody>
+                            {recentMeetings.map((meeting, index) => (
+                                <React.Fragment key={index}>
+                                    <tr>
+                                        <td>{index + 1}</td>
+                                        <td>{meeting.topic}</td>
+                                        <td>{meeting.date}</td>
+                                        <td>{meeting.time}</td>
+                                        <td>
+                                            {meeting._id && isMember && (
+                                                <button
+                                                    className="suggestion-button"
+                                                    onClick={() => setSuggestionBoxIndex(prev => prev === index ? null : index)}
+                                                    style={{ marginLeft: '10px' }}
+                                                >
+                                                    Suggestion
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => handleViewMinutes(meeting.minutesText, index)}
+                                                className="minutes-button"
+                                            >
+                                                View Minutes
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {/* For convener: show suggestions for this MoM */}
+                                    {isConvener && momSuggestions.length > 0 && meeting._id && (
+                                        <tr>
+                                            <td colSpan={5}>
+                                                <div style={{ background: '#f6faff', border: '1px solid #b3e0ff', padding: '8px', margin: '8px 0' }}>
+                                                    <strong>Suggestions for this MoM:</strong>
+                                                    {loadingSuggestions ? (
+                                                        <div>Loading suggestions...</div>
+                                                    ) : (
+                                                        <ul style={{ margin: 0, paddingLeft: 16 }}>
+                                                            {(momSuggestions.find(m => m.mom._id === meeting._id)?.suggestions || []).length === 0 ? (
+                                                                <li>No suggestions.</li>
+                                                            ) : (
+                                                                momSuggestions.find(m => m.mom._id === meeting._id).suggestions.map((s, idx) => (
+                                                                    <li key={s._id || idx}>
+                                                                        <b>{s.userId?.fullname?.firstname || s.userId?.email || 'Unknown'}:</b> {s.suggestion}
+                                                                    </li>
+                                                                ))
+                                                            )}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {suggestionBoxIndex === index && isMember && meeting._id && (
+                                        <tr>
+                                            <td colSpan={5}>
+                                                <textarea
+                                                    style={{ width: '100%', height: '80px', marginTop: '10px' }}
+                                                    placeholder="Enter your suggestion here..."
+                                                    value={suggestionText}
+                                                    onChange={(e) => setSuggestionText(e.target.value)}
+                                                />
+                                                <button
+                                                    style={{ marginTop: '5px' }}
+                                                    onClick={() => handleSubmitSuggestion(meeting._id)}
+                                                >
+                                                    Submit Suggestion
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            ))}
                         </tbody>
                     </table>
                 </section>
             )}
 
-            {showMinutesForm && (
+            {showMinutes && (
                 <section id="minu">
                     <form id="minutes">
-                        <button
-                            type="button"
-                            className="close-btn"
-                            onClick={() => setShowMinutesForm(false)}
-                        >
-                            x
+                        <button type="button" className="close-btn" onClick={() => setShowMinutes(false)}>
+                            ✕
                         </button>
-                        <label htmlFor="detail">Enter the details:</label>
-                        <textarea id="detail" />
-                        <br />
-                        <br />
-                        <button type="button" id="save" onClick={() => setShowMinutesForm(false)}>
-                            Save
-                        </button>
-                        <button type="button" id="generate-pdf" onClick={generatePDF}>
+                        <label htmlFor="detail">Meeting Minutes:</label>
+                        <textarea
+                            id="detail"
+                            value={editedMinutes}
+                            onChange={(e) => setEditedMinutes(e.target.value)}
+                            readOnly={!canEditMinutes}
+                        />
+                        {canEditMinutes && (
+                            <button type="button" id="save" onClick={handleSaveMinutes}>
+                                Save
+                            </button>
+                        )}
+                        <button type="button" id="generate-pdf" onClick={handleGeneratePDF}>
                             Generate PDF
                         </button>
                     </form>
                 </section>
             )}
+            {showCreateMoM && isConvener && (
+                <section className="create-mom-section">
+                    <button className="close-btn" onClick={() => setShowCreateMoM(false)}>✕</button>
+                    <h2>Create New Minutes of Meeting</h2>
+                    <label>Topic:</label>
+                    <input
+                        type="text"
+                        placeholder="Enter meeting topic"
+                        className="mom-input"
+                        value={newMoMTopic}
+                        onChange={e => setNewMoMTopic(e.target.value)}
+                    />
+                    <label>Date :</label>
+                    <input
+                        type="date"
+                        className="mom-input"
+                        value={newMoMDate}
+                        onChange={e => setNewMoMDate(e.target.value)}
+                    />
+                    <label>Time :</label>
+                    <input
+                        type="time"
+                        className="mom-input"
+                        value={newMoMTime}
+                        onChange={e => setNewMoMTime(e.target.value)}
+                    />
+                    <textarea
+                        value={newMinutesText}
+                        onChange={e => setNewMinutesText(e.target.value)}
+                        placeholder="Enter meeting minutes here..."
+                        rows="10"
+                    />
+                    <button onClick={handleSaveNewMoM} className="save-mom-btn">
+                        Save MoM
+                    </button>
+                </section>
+            )}
+
+            {showSuggestions && (
+                <section className="suggestions-section">
+                    <button className="close-btn" onClick={() => setShowSuggestions(false)}>✕</button>
+                    <h2>Member Suggestions</h2>
+                    {loadingSuggestions ? (
+                        <div>Loading suggestions...</div>
+                    ) : suggestions.length === 0 ? (
+                        <div>No suggestions found.</div>
+                    ) : (
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Meeting Topic</th>
+                                    <th>Meeting Date</th>
+                                    <th>Member</th>
+                                    <th>Suggestion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {suggestions.map((s, idx) => (
+                                    <tr key={s._id || idx}>
+                                        <td>{s.meetingTopic}</td>
+                                        <td>{s.meetingDate ? new Date(s.meetingDate).toLocaleDateString() : ''}</td>
+                                        <td>{
+  s.userId && typeof s.userId === 'object'
+    ? (s.userId.firstname && s.userId.lastname
+        ? `${s.userId.firstname} ${s.userId.lastname}`
+        : (typeof s.userId.fullname === 'string' ? s.userId.fullname : (typeof s.userId.email === 'string' ? s.userId.email : JSON.stringify(s.userId))))
+    : (typeof s.userId === 'string' ? s.userId : 'Unknown')
+}</td>
+                                        <td>{s.suggestion}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </section>
+            )}
+
         </div>
     );
 }
