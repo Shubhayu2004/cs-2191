@@ -1,3 +1,93 @@
+// --- Chairman proposes convener and members ---
+const Notification = require('../models/notification.model');
+const User = require('../models/user.model');
+
+// Chairman proposes convener and members for approval
+exports.proposeMembers = async (req, res) => {
+    try {
+        const { committeeId, convener, members } = req.body;
+        if (!committeeId || !convener || !members || !Array.isArray(members) || members.length === 0) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        const committee = await Committee.findById(committeeId);
+        if (!committee) return res.status(404).json({ message: 'Committee not found' });
+        // Only chairman can propose
+        if (String(committee.chairman.email) !== req.user.email) {
+            return res.status(403).json({ message: 'Only the chairman can propose members' });
+        }
+        // Store proposal
+        committee.pendingProposal = {
+            convener,
+            members,
+            status: 'pending',
+            feedback: ''
+        };
+        await committee.save();
+        // Notify all admins
+        const admins = await User.find({ status: 'admin' });
+        const message = `Chairman of committee '${committee.committeeName}' has proposed a convener and members for approval.`;
+        const link = `/committeeDashboard/${committee._id}`;
+        for (const admin of admins) {
+            await Notification.create({ userId: admin._id, message, link });
+        }
+        res.status(200).json({ message: 'Proposal sent to admin for approval.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Admin approves proposal
+exports.approveProposal = async (req, res) => {
+    try {
+        const { committeeId } = req.body;
+        const committee = await Committee.findById(committeeId);
+        if (!committee || !committee.pendingProposal) return res.status(404).json({ message: 'No pending proposal found' });
+        // Only admin can approve
+        if (req.user.status !== 'admin') return res.status(403).json({ message: 'Only admin can approve proposals' });
+        // Set convener and members
+        committee.convener = committee.pendingProposal.convener;
+        committee.members = committee.pendingProposal.members;
+        committee.pendingProposal.status = 'approved';
+        await committee.save();
+        // Notify chairman
+        const chairmanUser = await User.findOne({ email: committee.chairman.email });
+        if (chairmanUser) {
+            await Notification.create({
+                userId: chairmanUser._id,
+                message: `Your proposal for convener and members in committee '${committee.committeeName}' was approved by admin.`,
+                link: `/committeeDashboard/${committee._id}`
+            });
+        }
+        res.status(200).json({ message: 'Proposal approved and committee updated.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Admin rejects proposal
+exports.rejectProposal = async (req, res) => {
+    try {
+        const { committeeId, feedback } = req.body;
+        const committee = await Committee.findById(committeeId);
+        if (!committee || !committee.pendingProposal) return res.status(404).json({ message: 'No pending proposal found' });
+        if (req.user.status !== 'admin') return res.status(403).json({ message: 'Only admin can reject proposals' });
+        committee.pendingProposal.status = 'rejected';
+        committee.pendingProposal.feedback = feedback || '';
+        await committee.save();
+        // Notify chairman
+        const chairmanUser = await User.findOne({ email: committee.chairman.email });
+        if (chairmanUser) {
+            await Notification.create({
+                userId: chairmanUser._id,
+                message: `Your proposal for convener and members in committee '${committee.committeeName}' was rejected by admin. Feedback: ${feedback}`,
+                link: `/committeeDashboard/${committee._id}`
+            });
+        }
+        res.status(200).json({ message: 'Proposal rejected and feedback sent to chairman.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 const Committee = require('../models/committee.model');
 const mongoose = require('mongoose');
 const { sendNotification } = require('../controllers/minutes.controller');

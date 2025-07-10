@@ -9,7 +9,8 @@ const CommitteeForm = ({
   users = [], 
   onSubmit, 
   onChange, 
-  onAddMember 
+  onAddMember, 
+  mode = 'admin' // 'admin' or 'chairman'
 }) => {
   return (
     <form onSubmit={onSubmit}>
@@ -33,108 +34,115 @@ const CommitteeForm = ({
         />
       </div>
 
-      <div className="form-group">
-        <label>Chairman:</label>
-        <select
-          value={formData.chairman?.email || ''}
-          onChange={(e) => {
-            const selectedUser = users.find(user => user.email === e.target.value);
-            if (selectedUser) {
-              onChange('chairman', {
-                name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
-                email: selectedUser.email
-              });
-            }
-          }}
-          required
-        >
-          <option value="">Select Chairman</option>
-          {users.map((user) => (
-            <option key={user._id} value={user.email}>
-              {user.fullname.firstname} {user.fullname.lastname} ({user.email})
-            </option>
-          ))}
-        </select>
-      </div>
+      {mode === 'admin' && (
+        <div className="form-group">
+          <label>Chairman:</label>
+          <select
+            value={formData.chairman?.email || ''}
+            onChange={(e) => {
+              const selectedUser = users.find(user => user.email === e.target.value);
+              if (selectedUser) {
+                onChange('chairman', {
+                  name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
+                  email: selectedUser.email
+                });
+              }
+            }}
+            required
+          >
+            <option value="">Select Chairman</option>
+            {users.map((user) => (
+              <option key={user._id} value={user.email}>
+                {user.fullname.firstname} {user.fullname.lastname} ({user.email})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      <div className="form-group">
-        <label>Convenor:</label>
-        <select
-          value={formData.convener?.email || ''}
-          onChange={(e) => {
-            const selectedUser = users.find(user => user.email === e.target.value);
-            if (selectedUser) {
-              onChange('convener', {
-                name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
-                email: selectedUser.email
-              });
-            }
-          }}
-          required
-        >
-          <option value="">Select Convenor</option>
-          {users.map((user) => (
-            <option key={user._id} value={user.email}>
-              {user.fullname.firstname} {user.fullname.lastname} ({user.email})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Members:</label>
-        {formData.members.map((member, index) => (
-          <div key={index} className="member-select">
+      {mode === 'chairman' && (
+        <>
+          <div className="form-group">
+            <label>Convenor:</label>
             <select
-              value={member.email || ''}
+              value={formData.convener?.email || ''}
               onChange={(e) => {
                 const selectedUser = users.find(user => user.email === e.target.value);
                 if (selectedUser) {
-                  const updatedMembers = [...formData.members];
-                  updatedMembers[index] = {
-                    ...updatedMembers[index],
+                  onChange('convener', {
                     name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
                     email: selectedUser.email
-                  };
-                  onChange('members', updatedMembers);
+                  });
                 }
               }}
               required
             >
-              <option value="">Select Member</option>
+              <option value="">Select Convenor</option>
               {users
-                .filter(user => 
-                  user.email !== formData.chairman?.email && 
-                  user.email !== formData.convener?.email &&
-                  !formData.members.some((m, i) => i !== index && m.email === user.email)
-                )
+                .filter(user => user.email !== formData.chairman?.email)
                 .map((user) => (
                   <option key={user._id} value={user.email}>
                     {user.fullname.firstname} {user.fullname.lastname} ({user.email})
                   </option>
-                ))
-              }
+                ))}
             </select>
-            { /* Removed role select: All added members are normal members by default */}
-            <button 
-              type="button" 
-              className="remove-member"
-              onClick={() => {
-                const updatedMembers = formData.members.filter((_, i) => i !== index);
-                onChange('members', updatedMembers);
-              }}
-            >
-              Remove
+          </div>
+
+          <div className="form-group">
+            <label>Members:</label>
+            {formData.members.map((member, index) => (
+              <div key={index} className="member-select">
+                <select
+                  value={member.email || ''}
+                  onChange={(e) => {
+                    const selectedUser = users.find(user => user.email === e.target.value);
+                    if (selectedUser) {
+                      const updatedMembers = [...formData.members];
+                      updatedMembers[index] = {
+                        ...updatedMembers[index],
+                        name: `${selectedUser.fullname.firstname} ${selectedUser.fullname.lastname}`,
+                        email: selectedUser.email
+                      };
+                      onChange('members', updatedMembers);
+                    }
+                  }}
+                  required
+                >
+                  <option value="">Select Member</option>
+                  {users
+                    .filter(user => 
+                      user.email !== formData.chairman?.email && 
+                      user.email !== formData.convener?.email &&
+                      !formData.members.some((m, i) => i !== index && m.email === user.email)
+                    )
+                    .map((user) => (
+                      <option key={user._id} value={user.email}>
+                        {user.fullname.firstname} {user.fullname.lastname} ({user.email})
+                      </option>
+                    ))
+                  }
+                </select>
+                <button 
+                  type="button" 
+                  className="remove-member"
+                  onClick={() => {
+                    const updatedMembers = formData.members.filter((_, i) => i !== index);
+                    onChange('members', updatedMembers);
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button type="button" className="addmemberbtn" onClick={() => onAddMember()}>
+              Add Member
             </button>
           </div>
-        ))}
-        <button type="button" className="addmemberbtn" onClick={() => onAddMember()}>
-          Add Member
-        </button>
-      </div>
+        </>
+      )}
 
       <button type="submit" className="committeebtn">
-        Create Committee
+        {mode === 'admin' ? 'Create Committee' : 'Send for Approval'}
       </button>
     </form>
   );
@@ -173,7 +181,8 @@ CommitteeForm.propTypes = {
   ),
   onSubmit: PropTypes.func,
   onChange: PropTypes.func,
-  onAddMember: PropTypes.func
+  onAddMember: PropTypes.func,
+  mode: PropTypes.oneOf(['admin', 'chairman'])
 };
 
 export default CommitteeForm;

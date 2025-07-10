@@ -32,13 +32,23 @@ const committeeSchema = new mongoose.Schema({
         email: { type: String, required: true }
     },
     convener: {
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
-        name: { type: String, required: true },
-        email: { type: String, required: true }
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' }, // not required at creation
+        name: { type: String },
+        email: { type: String }
     },
     members: [memberSchema],
     pastMeetings: [pastMeetingSchema], // Optional array of past meetings
-    upcomingMeetings: [upcomingMeetingSchema] // Optional array of upcoming meetings
+    upcomingMeetings: [upcomingMeetingSchema], // Optional array of upcoming meetings
+    pendingProposal: {
+        convener: {
+            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+            name: String,
+            email: String
+        },
+        members: [memberSchema],
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+        feedback: { type: String }
+    }
 });
 
 // Create and export the Committee model

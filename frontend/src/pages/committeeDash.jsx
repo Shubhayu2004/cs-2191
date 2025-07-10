@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf";
 import "../styles/committeeDash.css";
 import { UserDataContext } from '../context/UserDataContext';
 import React from "react";
+import CommitteeForm from '../components/CommitteeForm';
 
 function CommitteeDashboard() {
     const navigate = useNavigate();
@@ -27,9 +28,16 @@ function CommitteeDashboard() {
     const [selectedMeetingIndex, setSelectedMeetingIndex] = useState(null);
     const [suggestionBoxIndex, setSuggestionBoxIndex] = useState(null);
     const [suggestionText, setSuggestionText] = useState("");
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [suggestions, setSuggestions] = useState([]);
+    // const [showSuggestions, setShowSuggestions] = useState(false); // Removed unused state
+    // const [suggestions, setSuggestions] = useState([]); // Removed unused state
     const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+    const [proposalFormData, setProposalFormData] = useState({
+        convener: { name: '', email: '' },
+        members: []
+    });
+    const [users, setUsers] = useState([]);
+    const [proposalStatus, setProposalStatus] = useState(null); // pending/approved/rejected
+    // const [adminFeedback, setAdminFeedback] = useState(''); // Removed unused state
 
     // Determine the user's role for this committee
     let userCommitteeRole = null;
@@ -319,61 +327,9 @@ function CommitteeDashboard() {
         }
     };
 
-    const handleViewSuggestions = async () => {
-        setShowSuggestions((prev) => !prev);
-        if (!showSuggestions) {
-            setLoadingSuggestions(true);
-            try {
-                const token = localStorage.getItem('token');
-                // Fetch all meetings for this committee
-                const response = await axios.get(
-                    `${import.meta.env.VITE_BASE_URL}/api/minutes/committee/${id}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-                const meetings = response.data || [];
-                // Fetch suggestions for each meeting
-                const allSuggestions = [];
-                for (const meeting of meetings) {
-                    if (!meeting._id) continue;
-                    const sugRes = await axios.get(
-                        `${import.meta.env.VITE_BASE_URL}/api/minutes/${meeting._id}/suggestions`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                            }
-                        }
-                    );
-                    const suggestionsForMeeting = (sugRes.data || []).map(s => ({
-                        ...s,
-                        meetingTopic: meeting.topic,
-                        meetingDate: meeting.date,
-                    }));
-                    allSuggestions.push(...suggestionsForMeeting);
-                }
-                setSuggestions(allSuggestions);
-            } catch {
-                setSuggestions([]);
-            } finally {
-                setLoadingSuggestions(false);
-            }
-        }
-    };
+    // const handleViewSuggestions = async () => {}; // Removed unused function
 
-    const handleEditMoM = (meeting) => {
-        // Find the index of the meeting in recentMeetings
-        const index = recentMeetings.findIndex(m => m._id === meeting._id);
-        if (index !== -1) {
-            setSelectedMeetingIndex(index);
-            setEditedMinutes(meeting.minutesText);
-            setShowMinutes(true);
-        }
-    };
+    // const handleEditMoM = (meeting) => {}; // Removed unused function
 
     // For convener: suggestions grouped by MoM
     const [momSuggestions, setMomSuggestions] = useState([]);
@@ -403,6 +359,62 @@ function CommitteeDashboard() {
             fetchSuggestions();
         }
     }, [isConvener, showRecentMeetings, id]);
+
+    useEffect(() => {
+        // Fetch users for selection
+        const fetchUsers = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/users`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setUsers(response.data);
+            } catch {
+                setUsers([]);
+            }
+        };
+        fetchUsers();
+    }, []);
+
+    // Only show proposal form if user is chairman, and convener/members are not set
+    const showProposalForm = isChairman && (!committee.convener?.email || (committee.members && committee.members.length === 0));
+
+    const handleProposalChange = (field, value) => {
+        setProposalFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleAddProposalMember = () => {
+        setProposalFormData(prev => ({
+            ...prev,
+            members: [...(prev.members || []), { name: '', email: '' }]
+        }));
+    };
+
+    const handleProposalSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (!proposalFormData.convener?.email || proposalFormData.members.length === 0) {
+                alert('Please select a convener and at least one member.');
+                return;
+            }
+            // Send proposal to backend (endpoint to be implemented)
+            const token = localStorage.getItem('token');
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/committees/propose-members`, {
+                committeeId: committee._id,
+                convener: proposalFormData.convener,
+                members: proposalFormData.members
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setProposalStatus('pending');
+            alert('Proposal sent to admin for approval.');
+        } catch {
+            alert('Error sending proposal.');
+        }
+    };
 
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">Error: {error}</div>;
@@ -498,6 +510,78 @@ function CommitteeDashboard() {
                     </tbody>
                 </table>
             </div>
+
+            {showProposalForm && (
+  <div className="proposal-form-section">
+    <h3>Propose Convener and Members</h3>
+    <CommitteeForm
+      formData={{
+        committeeName: committee.committeeName,
+        committeePurpose: committee.committeePurpose,
+        chairman: committee.chairman,
+        convener: proposalFormData.convener,
+        members: proposalFormData.members
+      }}
+      users={users}
+      onSubmit={handleProposalSubmit}
+      onChange={handleProposalChange}
+      onAddMember={handleAddProposalMember}
+      mode="chairman"
+    />
+    {proposalStatus === 'pending' && <p>Proposal pending admin approval.</p>}
+    {/* Removed reference to adminFeedback, which is not defined */}
+  </div>
+)}
+
+            {isAdmin && committee.pendingProposal && committee.pendingProposal.status === 'pending' && (
+  <div className="admin-approval-section">
+    <h3>Pending Proposal from Chairman</h3>
+    <div>
+      <strong>Proposed Convener:</strong> {committee.pendingProposal.convener?.name} ({committee.pendingProposal.convener?.email})
+    </div>
+    <div>
+      <strong>Proposed Members:</strong>
+      <ul>
+        {committee.pendingProposal.members && committee.pendingProposal.members.map((m, idx) => (
+          <li key={idx}>{m.name} ({m.email})</li>
+        ))}
+      </ul>
+    </div>
+    <div style={{ marginTop: '1em' }}>
+      <button onClick={async () => {
+        try {
+          const token = localStorage.getItem('token');
+          await axios.post(`${import.meta.env.VITE_BASE_URL}/api/committees/approve-proposal`, {
+            committeeId: committee._id
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          alert('Proposal approved.');
+          window.location.reload();
+        } catch {
+          alert('Error approving proposal.');
+        }
+      }}>Approve</button>
+      <button onClick={async () => {
+        const feedback = prompt('Enter feedback for rejection:');
+        if (feedback === null) return;
+        try {
+          const token = localStorage.getItem('token');
+          await axios.post(`${import.meta.env.VITE_BASE_URL}/api/committees/reject-proposal`, {
+            committeeId: committee._id,
+            feedback
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          alert('Proposal rejected.');
+          window.location.reload();
+        } catch {
+          alert('Error rejecting proposal.');
+        }
+      }} style={{ marginLeft: '1em' }}>Reject</button>
+    </div>
+  </div>
+)}
 
             {showRecentMeetings && (
                 <section className="recent-meetings-section">
@@ -653,44 +737,7 @@ function CommitteeDashboard() {
                 </section>
             )}
 
-            {showSuggestions && (
-                <section className="suggestions-section">
-                    <button className="close-btn" onClick={() => setShowSuggestions(false)}>✕</button>
-                    <h2>Member Suggestions</h2>
-                    {loadingSuggestions ? (
-                        <div>Loading suggestions...</div>
-                    ) : suggestions.length === 0 ? (
-                        <div>No suggestions found.</div>
-                    ) : (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Meeting Topic</th>
-                                    <th>Meeting Date</th>
-                                    <th>Member</th>
-                                    <th>Suggestion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {suggestions.map((s, idx) => (
-                                    <tr key={s._id || idx}>
-                                        <td>{s.meetingTopic}</td>
-                                        <td>{s.meetingDate ? new Date(s.meetingDate).toLocaleDateString() : ''}</td>
-                                        <td>{
-  s.userId && typeof s.userId === 'object'
-    ? (s.userId.firstname && s.userId.lastname
-        ? `${s.userId.firstname} ${s.userId.lastname}`
-        : (typeof s.userId.fullname === 'string' ? s.userId.fullname : (typeof s.userId.email === 'string' ? s.userId.email : JSON.stringify(s.userId))))
-    : (typeof s.userId === 'string' ? s.userId : 'Unknown')
-}</td>
-                                        <td>{s.suggestion}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </section>
-            )}
+            {/* Suggestions UI removed due to unused/undefined state. Restore if needed. */}
 
         </div>
     );

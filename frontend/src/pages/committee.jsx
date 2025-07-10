@@ -79,20 +79,18 @@ const CommitteeApp = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-        // Validate form data
-        if (!formData.committeeName || !formData.committeePurpose || 
-            !formData.chairman.email || !formData.convener.email) {
+        // Only require chairman for admin mode
+        if (!formData.committeeName || !formData.committeePurpose || !formData.chairman.email) {
             throw new Error('Please fill all required fields');
         }
 
-        // Find userId for chairman and convener
+        // Find userId for chairman
         const chairmanUser = users.find(u => u.email === formData.chairman.email);
-        const convenerUser = users.find(u => u.email === formData.convener.email);
-        if (!chairmanUser || !convenerUser) {
-            throw new Error('Chairman or Convener user not found');
+        if (!chairmanUser) {
+            throw new Error('Chairman user not found');
         }
 
-        // Log the payload for debugging
+        // Only send chairman in payload for admin creation
         const payload = {
             committeeName: formData.committeeName,
             committeePurpose: formData.committeePurpose,
@@ -100,21 +98,7 @@ const CommitteeApp = () => {
                 userId: chairmanUser._id,
                 name: formData.chairman.name,
                 email: formData.chairman.email,
-            },
-            convener: {
-                userId: convenerUser._id,
-                name: formData.convener.name,
-                email: formData.convener.email,
-            },
-            members: formData.members.map(member => {
-                const memberUser = users.find(u => u.email === member.email);
-                return {
-                    userId: memberUser ? memberUser._id : undefined,
-                    name: member.name,
-                    email: member.email,
-                    role: member.role || 'member'
-                };
-            })
+            }
         };
         console.log('Committee creation payload:', payload);
 
@@ -177,6 +161,7 @@ const CommitteeApp = () => {
               ...formData.members, 
               { name: "", email: "" }
             ])}
+            mode="admin"
           />
         )}
 
