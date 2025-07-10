@@ -34,12 +34,7 @@ const Home = () => {
     setShowNotis(!showNotis);
     // Optionally, mark all as read here
   };
-  const [notifications, setNotifications] = useState(5); // Initial notification count
-  const [showNotis, setShowNotis] = useState(false);
-  const handleClick = () => {
-    setNotifications(0);
-    setShowNotis(true);
-  };
+  // Removed duplicate state declarations and unused handleClick
 
   // Removed useEffect for fetching user committees as 'Your Committees' section is removed
 

@@ -1,14 +1,15 @@
-// Chairman proposes convener and members
-router.post('/propose-members', committeeController.proposeMembers);
-// Admin approves/rejects proposal
-router.post('/approve-proposal', committeeController.approveProposal);
-router.post('/reject-proposal', committeeController.rejectProposal);
+
 const express = require('express');
 const router = express.Router();
 const committeeController = require('../controllers/committee.controller');
 const { authUser } = require('../middlewares/auth.middleware');
 const { requireCommitteeRole } = require('../middlewares/committeeRole.middleware');
 const committeeRoleActions = require('../controllers/committeeRoleActions.controller');
+// Chairman proposes convener and members
+router.post('/propose-members', committeeController.proposeMembers);
+// Admin approves/rejects proposal
+router.post('/approve-proposal', committeeController.approveProposal);
+router.post('/reject-proposal', committeeController.rejectProposal);
 
 router.use(authUser);
 

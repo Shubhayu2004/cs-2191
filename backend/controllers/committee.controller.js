@@ -96,23 +96,21 @@ const { getUserIdsByEmails } = require('./user.controller');
 exports.createCommittee = async (req, res) => {
     try {
         console.log('createCommittee: called with body:', req.body);
-        const { committeeName, committeePurpose, chairman, convener, members } = req.body;
-        
-        // Validate required fields
-        if (!committeeName || !committeePurpose || !chairman || !convener) {
+        const { committeeName, committeePurpose, chairman } = req.body;
+
+        // Validate required fields (admin creation: only these are required)
+        if (!committeeName || !committeePurpose || !chairman) {
             return res.status(400).json({ 
                 message: 'Missing required fields',
-                required: ['committeeName', 'committeePurpose', 'chairman', 'convener']
+                required: ['committeeName', 'committeePurpose', 'chairman']
             });
         }
 
-        // Ensure userId is present for chairman, convener, and all members
-        if (!chairman.userId || !convener.userId || members.some(m => !m.userId)) {
+        // Ensure userId is present for chairman
+        if (!chairman.userId) {
             return res.status(400).json({
-                message: 'userId is required for chairman, convener, and all members',
-                chairmanUserId: chairman.userId,
-                convenerUserId: convener.userId,
-                memberUserIds: members.map(m => m.userId)
+                message: 'userId is required for chairman',
+                chairmanUserId: chairman.userId
             });
         }
 
@@ -123,30 +121,18 @@ exports.createCommittee = async (req, res) => {
                 userId: chairman.userId,
                 name: chairman.name,
                 email: chairman.email
-            }, 
-            convener: {
-                userId: convener.userId,
-                name: convener.name,
-                email: convener.email
-            }, 
-            members: members.map(member => ({
-                userId: member.userId,
-                name: member.name,
-                email: member.email,
-                role: member.role || 'member'
-            }))
+            }
+            // convener and members will be added later by chairman proposal/approval flow
         });
 
         await committee.save();
 
         // Try notification delivery, but do not fail committee creation if notification fails
         try {
-            console.log('createCommittee: preparing to notify members');
-            const allMemberEmails = [chairman.email, convener.email, ...members.map(m => m.email)];
-            console.log('createCommittee: allMemberEmails:', allMemberEmails);
-            const userIds = await getUserIdsByEmails(allMemberEmails);
+            console.log('createCommittee: preparing to notify chairman');
+            const userIds = await getUserIdsByEmails([chairman.email]);
             console.log('createCommittee: userIds from emails:', userIds);
-            const message = `You have been added to the committee: ${committee.committeeName}`;
+            const message = `You have been added as chairman to the committee: ${committee.committeeName}`;
             const link = `/committeeDashboard/${committee._id}`;
             console.log('createCommittee: calling sendNotification');
             await sendNotification(userIds, message, link);
