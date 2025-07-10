@@ -115,7 +115,7 @@ const CommitteeForm = ({
                 ))
               }
             </select>
-            {/* Removed role select: All added members are normal members by default */}
+            { /* Removed role select: All added members are normal members by default */}
             <button 
               type="button" 
               className="remove-member"
