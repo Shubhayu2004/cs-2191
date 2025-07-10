@@ -115,22 +115,7 @@ const CommitteeForm = ({
                 ))
               }
             </select>
-            <select
-              value={member.role || 'member'}
-              onChange={e => {
-                const updatedMembers = [...formData.members];
-                updatedMembers[index] = {
-                  ...updatedMembers[index],
-                  role: e.target.value
-                };
-                onChange('members', updatedMembers);
-              }}
-              required
-            >
-              <option value="member">Member</option>
-              <option value="convener">Convener</option>
-              <option value="chairman">Chairman</option>
-            </select>
+            {/* Removed role select: All added members are normal members by default */}
             <button 
               type="button" 
               className="remove-member"
