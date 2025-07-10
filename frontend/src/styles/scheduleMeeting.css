@@ -1,0 +1,100 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f4f8;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+textarea {
+    font-size: 18px;
+    padding: 10px;
+    height: 35px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.btn {
+    padding: 10px 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.committee-list {
+    display: block;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 5px;
+    background: white;
+    width: 100%;
+}
+
+.committee {
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.committee:hover {
+    background-color: #e0e0e0;
+    transition: 0.3 ease;
+}
+
+input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+#scheduleMeetingForm {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    background: white;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+h2 {
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    textarea,
+    .btn {
+        font-size: 16px;
+    }
+}
